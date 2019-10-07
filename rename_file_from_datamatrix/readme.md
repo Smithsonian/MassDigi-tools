@@ -2,6 +2,8 @@
 
 These two tools will rename image files according to the code in a data matrix barcode in the image. This allows to easily rename files automatically so that they match the data matrix barcode. 
 
+The original files are not deleted, the renamed files are written to a subfolder called `export`.
+
 ### Rename File Pairs from Data Matrix Tool
 
 Rename file pairs using the data matrix barcode in the tif file. The tool requires two subfolders in the selected folder:
