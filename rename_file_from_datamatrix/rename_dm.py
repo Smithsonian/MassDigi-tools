@@ -51,11 +51,11 @@ try:
 
     cur_ver = current_ver.decode('ascii').replace('\n','')
     if cur_ver != ver:
-        msg_text = "{script_title}\n\n{subtitle}\n\n{repo}\n\n{lic}\n\nver. {ver}\nThis version is outdated. Current version is {cur_ver}.\nPlease download the updated version at: {repo}"
+        msg_text = "{subtitle}\n\n{repo}\n\n{lic}\n\nver. {ver}\nThis version is outdated. Current version is {cur_ver}.\nPlease download the updated version at: {repo}"
     else:
-        msg_text = "{script_title}\n\n{subtitle}\n\n{repo}\n\n{lic}\n\nver. {ver}"
+        msg_text = "{subtitle}\n\n{repo}\n\n{lic}\n\nver. {ver}"
 except:
-    msg_text = "{script_title}\n\n{subtitle}\n\n{repo}\n\n{lic}\n\nver. {ver}"
+    msg_text = "{subtitle}\n\n{repo}\n\n{lic}\n\nver. {ver}"
     cur_ver = ver
 
 
@@ -64,7 +64,9 @@ except:
 github_text = "Go to Github"
 layout = [
             [sg.Image(data = dpologo)],
-            [sg.Text(msg_text.format(script_title = script_title, subtitle = subtitle, ver = ver, repo = repo, lic = lic, cur_ver = cur_ver))],
+            [sg.Txt('_'  * 48)], 
+            [sg.Text(script_title, font=(20))],
+            [sg.Text(msg_text.format(subtitle = subtitle, ver = ver, repo = repo, lic = lic, cur_ver = cur_ver))],
             [sg.Submit("OK"), sg.Cancel(github_text)]]
 window = sg.Window("Info", layout)
 event, values = window.Read()
