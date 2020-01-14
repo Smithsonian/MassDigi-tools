@@ -20,7 +20,7 @@ from functools import partial
 from timeit import default_timer as timer
 from pathlib import Path
 from tqdm import tqdm
-
+from pyfiglet import Figlet
 
 
 #Script variables
@@ -40,12 +40,12 @@ locale.setlocale(locale.LC_ALL, 'en_US.utf8')
 current_time = strftime("%Y%m%d_%H%M%S", localtime())
 
 
+#Check args
 if len(sys.argv) == 1:
     sys.exit("Missing path")
 
 if len(sys.argv) > 2:
     sys.exit("Script takes a single argument")
-
 
 
 #Check for updates to the script
@@ -62,7 +62,7 @@ except:
     cur_ver = ver
 
 
-from pyfiglet import Figlet
+
 f = Figlet(font='slant')
 print("\n")
 print (f.renderText(script_title))
@@ -75,7 +75,6 @@ folder_to_check = sys.argv[1]
 
 
 print("\nChecking path {}".format(folder_to_check))
-
 
 # Logging
 if os.path.isdir('logs') == False:
@@ -96,7 +95,9 @@ logger1 = logging.getLogger("check_md5")
 logger1.info("folder_to_check: {}".format(folder_to_check))
 
 
-
+if os.path.isdir(folder_to_check) == False:
+    logger1.error("Path not found: {}".format(folder_to_check))
+    sys.exit(1)
 
 
 md5_file = glob.glob("{}/*.md5".format(folder_to_check))
@@ -113,7 +114,6 @@ if len(md5_file) > 1:
 else:
     #read md5 file
     md5_hashes = pd.read_csv(md5_file[0], sep = ' ', header = None, names = ['md5', 'file'])
-
 
 
 
