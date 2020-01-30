@@ -123,7 +123,6 @@ def check_md5(files):
     for file in tqdm(files):
         filename = Path(file).name
         md5_hash = hashlib.md5()
-        #print(file)
         with open(file, "rb") as f:
             # Read and update hash in chunks of 4K
             for byte_block in iter(lambda: f.read(4096), b""):
@@ -131,12 +130,9 @@ def check_md5(files):
         file_md5 = md5_hash.hexdigest()
         md5_from_file = md5_hashes[md5_hashes.file == filename]['md5'].to_string(index=False).strip()
         if file_md5 == md5_from_file:
-            #logger1.info("MD5 Hashes Match {}:{}:{}".format(filename, file_md5, md5_from_file))
             continue
         else:
-            #logger1.error("{}:{}:{}".format(filename, file_md5, md5_from_file))
             bad_files.append(filename) 
-            return filename
     if len(bad_files) > 0:
         return bad_files
     else:
@@ -172,5 +168,3 @@ else:
     print(exit_msg)
     print(res)
     sys.exit(9)
-
-sys.exit(0)
