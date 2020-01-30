@@ -164,7 +164,7 @@ if res == 0:
     logger1.info(exit_msg)
     sys.exit(0)
 else:
-    exit_msg = "ERROR: Files do not match md5:"
+    exit_msg = "ERROR: {} files do not match md5:".format(len(res))
     print(exit_msg)
     print(res)
     sys.exit(9)
