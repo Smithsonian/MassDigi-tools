@@ -166,5 +166,6 @@ if res == 0:
 else:
     exit_msg = "ERROR: {} files do not match md5:".format(len(res))
     print(exit_msg)
-    print(res)
+    for file in res:
+        print(file)
     sys.exit(9)
