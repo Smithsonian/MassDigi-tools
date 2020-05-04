@@ -132,7 +132,7 @@ def check_md5(files):
         if file_md5 == md5_from_file:
             continue
         else:
-            bad_files.append(filename) 
+            bad_files.append("{}|{}|{}".format(filename, file_md5, md5_from_file)) 
     if len(bad_files) > 0:
         return bad_files
     else:
