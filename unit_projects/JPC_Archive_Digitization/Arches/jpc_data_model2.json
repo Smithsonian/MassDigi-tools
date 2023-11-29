@@ -1,0 +1,50 @@
+{
+  "@context": "https://linked.art/ns/v1/linked-art.json",
+  "id": "[ID]",
+  "type": "HumanMadeObject",
+  "label": "[TITLE]",
+  "classified_as": [
+    {
+      "id": "http://vocab.getty.edu/aat/300046300",
+      "type": "Type",
+      "label": "photographs"
+    },
+    {
+      "id": "http://vocab.getty.edu/aat/300127104",
+      "type": "Type",
+      "label": "photographic prints"
+    }
+  ],
+  "identified_by": [
+    {
+      "type": "Name",
+      "classified_as": [
+        {
+          "id": "http://vocab.getty.edu/aat/300404670",
+          "type": "Type",
+          "label": "Primary Name"
+        }
+      ],
+      "content": "[TITLE]"
+    }
+  ],
+  "referred_to_by": [
+    {
+      "type": "LinguisticObject",
+      "label": "Copyright Statement",
+      "classified_as": [
+        {
+          "id": "http://vocab.getty.edu/aat/300435434",
+          "type": "Type",
+          "label": "Copyright/Licensing Statement"
+        },
+        {
+          "id": "http://vocab.getty.edu/aat/300418049",
+          "type": "Type",
+          "label": "Brief Text"
+        }
+      ],
+      "content": "CC BY-NC: This license allows reusers to distribute, remix, adapt, and build upon the material in any medium or format for noncommercial purposes only, and only so long as attribution is given to the creator."
+    }
+  ]
+}
