@@ -107,23 +107,33 @@ for resource in list_resources:
                 fol_type = c02_item.find('.//' + ns + 'did/' + ns + 'unittitle').text
             except AttributeError:
                 continue
+            # try:
+            #     refid = c02_item.find('.//' + ns + 'c03').attrib['id'].replace('aspace_', '')
+            #     # Get URL
+            #     r = requests.get(
+            #         "{}/repositories/2/find_by_id/archival_objects?ref_id[]={};resolve[]=archival_objects".format(
+            #             settings.aspace_api, refid), headers=Headers)
+            #     object_json = json.loads(r.text)
+            #     uri = object_json['archival_objects'][0]['ref']
+            # except AttributeError:
+            #     print("120")
+            #     continue
+            # except IndexError:
+            #     print("123")
+            #     continue
             try:
-                refid = c02_item.find('.//' + ns + 'c03').attrib['id'].replace('aspace_', '')
+                c03_items = c02_item.findall('.//' + ns + 'c03')
+            except AttributeError:
+                continue
+            for c03_item in c03_items:
+                # refid = c03_item.find('.//' + ns + 'c03').attrib['id'].replace('aspace_', '')
+                refid = c03_item.attrib['id'].replace('aspace_', '')
                 # Get URL
                 r = requests.get(
                     "{}/repositories/2/find_by_id/archival_objects?ref_id[]={};resolve[]=archival_objects".format(
                         settings.aspace_api, refid), headers=Headers)
                 object_json = json.loads(r.text)
                 uri = object_json['archival_objects'][0]['ref']
-            except AttributeError:
-                continue
-            except IndexError:
-                continue
-            try:
-                c03_items = c02_item.findall('.//' + ns + 'c03')
-            except AttributeError:
-                continue
-            for c03_item in c03_items:
                 try:
                     archive_box = c03_item.find('.//' + ns + 'did/' + ns + 'container[@type="box"]').text
                 except AttributeError:
