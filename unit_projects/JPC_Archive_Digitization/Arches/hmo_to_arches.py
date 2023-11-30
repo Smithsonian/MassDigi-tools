@@ -11,6 +11,9 @@ import json
 import uuid
 import sys
 
+import settings_arches as settings
+import archesapiclient
+
 # MySQL
 import pymysql
 
@@ -28,51 +31,17 @@ GRAPH_ID: Final[str] = settings.graph_id
 ARCHES_ENDPOINT: str = settings.arches_api
 
 RESOURCES_ENDPOINT: Final[str] = f"{ARCHES_ENDPOINT}/resources"
-AUTH_ENDPOINT: Final[str] = f"{ARCHES_ENDPOINT}/o/token/"
 RESOURCE_URL: Final[str] = f"{ARCHES_ENDPOINT}/resource"
 
 
-class TestHMO(BaseModel):
-    """
-    Base Class that encapsulates the fields of our test model.
-    """
-    id: str
-    label: str
-    name_label: str
-    name_content: str
 
+url = ARCHES_ENDPOINT
+client_id = settings.arches_api_clientid
+username = settings.arches_api_username
+password = settings.arches_api_password
 
-class Auth(BaseModel):
-    access_token: str
-    refresh_token: str
+a_client = archesapiclient.ArchesClient(url, client_id, username, password)
 
-
-def auth() -> Auth:
-    """
-    Authentication is performed using the username, password and the client id created earlier.
-    Now each request must bear the access token for any actions to be performed.
-    """
-    response = requests.post(
-        AUTH_ENDPOINT,
-        data={
-            "username": settings.arches_api_username,
-            "password": settings.arches_api_password,
-            "grant_type": "password",
-            "client_id": settings.arches_api_clientid,
-        },
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-    )
-    data = response.json()
-    if response.status_code == 200 and "access_token" in data:
-        return Auth(
-            access_token=data["access_token"], refresh_token=data["refresh_token"]
-        )
-    else:
-        raise
-
-
-# Authorize user
-a = auth()
 
 
 # Connect to db
@@ -121,6 +90,11 @@ for row in data:
     # Get HMO ID from database
     hmo_id = row['hmo']
 
+    # Get filename from db to get sequence
+    cur.execute("SELECT id2_value from jpc_massdigi_ids WHERE id1_value = %(hmo_id)s", {'hmo_id': hmo_id})
+
+    res = cur.fetchall()   
+
     # Convert id
     id = "https://data.jpcarchive.org/{}".format(hmo_id)
 
@@ -135,11 +109,11 @@ for row in data:
     box_no = row['archive_box']
     sequence = #################
     
-    # if box_no != "":
-    #     title = "{} - Box {}".format(title, box_no)
-    #
-    # if folder_no != "":
-    #     title = "{} Folder {}".format(title, folder_no)
+    if box_no != "":
+        title = "{} - Box {}".format(title, box_no)
+    
+    if folder_no != "":
+        title = "{} Folder {}".format(title, folder_no)
 
     # Read data model from file
     f = open('jpc_data_model4.json')
@@ -147,7 +121,7 @@ for row in data:
     f.close()
 
     # Replace values of TITLE
-    # json_data_model['label'] = title
+    json_data_model['_label'] = title
     json_data_model['identified_by'][0]['content'] = title
 
     resource_id = uuid.uuid3(uuid.NAMESPACE_URL, id)

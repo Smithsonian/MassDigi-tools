@@ -15,64 +15,23 @@ import sys
 
 
 import settings_arches as settings
+import archesapiclient
 
-
-"""
-The Graph in arches is as explained here https://arches.readthedocs.io/en/7.2/data-model/?highlight=graph#graph-definition
-a data model respenting top level objects like Visual Works, Physical Objects etc.
-The id is autocreated from arches when creating the model and doesn't change, unless the Model represented by this graph,
-gets deleted and re-created.
-"""
 
 GRAPH_ID: Final[str] = settings.graph_id
 ARCHES_ENDPOINT: str = settings.arches_api
 
 RESOURCES_ENDPOINT: Final[str] = f"{ARCHES_ENDPOINT}/resources"
-AUTH_ENDPOINT: Final[str] = f"{ARCHES_ENDPOINT}/o/token/"
 RESOURCE_URL: Final[str] = f"{ARCHES_ENDPOINT}/resource"
 
 
-class TestHMO(BaseModel):
-    """
-    Base Class that encapsulates the fields of our test model.
-    """
-    id: str
-    label: str
-    name_label: str
-    name_content: str
+url = ARCHES_ENDPOINT
+client_id = settings.arches_api_clientid
+username = settings.arches_api_username
+password = settings.arches_api_password
 
+a_client = archesapiclient.ArchesClient(url, client_id, username, password)
 
-class Auth(BaseModel):
-    access_token: str
-    refresh_token: str
-
-
-def auth() -> Auth:
-    """
-    Authentication is performed using the username, password and the client id created earlier.
-    Now each request must bear the access token for any actions to be performed.
-    """
-    response = requests.post(
-        AUTH_ENDPOINT,
-        data={
-            "username": settings.arches_api_username,
-            "password": settings.arches_api_password,
-            "grant_type": "password",
-            "client_id": settings.arches_api_clientid,
-        },
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-    )
-    data = response.json()
-    if response.status_code == 200 and "access_token" in data:
-        return Auth(
-            access_token=data["access_token"], refresh_token=data["refresh_token"]
-        )
-    else:
-        raise
-
-
-# Authorize user
-a = auth()
 
 
 
@@ -89,32 +48,31 @@ id = "https://data.jpcarchive.org/{}".format(hmo_id)
 #   title = "3T"
 #   box_no = "BI-001A"
 #   folder_no = "001"
-title = "TEST TITLE 111"
-folder_no = "TEST FOLDER 111"
-box_no = "TEST BOX 111"
-sequence = 5
+#title = "TEST TITLE LJV"
+title = "TEST 20231130 LJV - Box BI-002B - Folder 007-A Image 0099" 
+#folder_no = "001-A"
+#box_no = "BI-001B"
+sequence = 99
+
 
 
 # Read data model from file
-f = open('jpc_data_model4.json')
+f = open('jpc_data_model_20231130.json')
 json_data_model = json.load(f)
 f.close()
 
 # Replace values of TITLE
 # json_data_model['label'] = title
 json_data_model['identified_by'][0]['content'] = title
+json_data_model['_label'] = title
 
 resource_id = uuid.uuid3(uuid.NAMESPACE_URL, id)
 #json_data_model['id'] = f"urn:uuid:{resource_id}"
 json_data_model['id'] = f"https://data.jpcarchive.org/object/{resource_id}"
-json_data_model['identified_by'][0]['id'] = f"https://data.jpcarchive.org/object/{resource_id}/name/1"
+json_data_model['assigned_by'][0]['assigned'][0]['value'] = sequence
 
-response = requests.put(
-    f"{RESOURCES_ENDPOINT}/{GRAPH_ID}/{resource_id}",
-    data=json.dumps(json_data_model),
-    params=(("format", "json-ld"), ("indent", 4)),
-    headers={"Authorization": f"Bearer {a.access_token}"},
-)
 
-print(response.status_code)
-print(response.reason)
+
+record_id = a_client.put_record(graph_id=GRAPH_ID, data=json_data_model, rec_id=hmo_id)
+
+print(hmo_id)
