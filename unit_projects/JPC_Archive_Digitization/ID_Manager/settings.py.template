@@ -3,8 +3,3 @@ id_manager_url=""
 
 username=""
 password=""
-
-db_host = ""
-db_db = ""
-db_user = ""
-db_password = ""

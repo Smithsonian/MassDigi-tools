@@ -1,31 +1,13 @@
 #!/usr/bin/env python3
 #
-# Write IDs to ID Manager
+# Write IDs to Getty's ID Manager
+
+# Ver 2023-12-04
 
 import json
 import requests
 import settings
-# import pandas as pd
-# import xml.etree.ElementTree as ET
-# import sys
 import csv
-
-# import psycopg2
-# import psycopg2.extras
-# # import psycopg2.extensions
-
-
-# Database
-# try:
-#     conn = psycopg2.connect(host=settings.db_host,
-#                             database=settings.db_db,
-#                             user=settings.db_user,
-#                             password=settings.db_password)
-#     conn.autocommit = True
-#     cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
-# except psycopg2.Error as e:
-#     print(e)
-#     sys.exit('System error')
 
 
 params = {
@@ -43,6 +25,7 @@ Headers = {"Authorization": "Bearer {}".format(access_token)}
 
 print("\n Posting IDs...")
 
+
 # To add the link between the database with the IDs and which ones are going to be written in ID Manager
 #   Loop each ID associated with an image or an HMO?
 #   Trigger once the DAMS UAN is stored.
@@ -58,25 +41,27 @@ print("\n Posting IDs...")
 
 # Generators
 # Osprey generator
-osprey_generator = "https://data.getty.edu/thesaurus/generators/osprey"
+osprey_generator = "https://data.getty.edu/local/thesaurus/generators/osprey"
 # Aspace generator
 aspace_generator = "https://data.getty.edu/local/thesaurus/generators/aspace"
 # Arches generator:
 arches_generator = "https://data.getty.edu/local/thesaurus/generators/arches"
 # DAMS generator:
-dams_generator = "https://data.getty.edu/thesaurus/generators/dams"
+dams_generator = "https://data.getty.edu/local/thesaurus/generators/dams"
 # EDAN generator:
 edan_generator = "https://data.getty.edu/local/thesaurus/generators/edan"
 
 
 # Motivations
+#   - commented the ones we won't seem to need and variables are now "motivation_{shortname}"
 
 # ASpace motivation
-aspace_motivation = "https://data.getty.edu/local/thesaurus/motivations/part_of"
+# aspace_motivation = "https://data.getty.edu/local/thesaurus/motivations/part_of"
 
 # Slug - Links the body to a target slug number
 #   Slug record in Arches for the HMO (to confirm)
-slug_motivation = "https://data.getty.edu/thesaurus/motivations/arches_record"
+# slug_motivation = "https://data.getty.edu/local/thesaurus/motivations/arches_record"
+motivation_arches_record = "https://data.getty.edu/local/thesaurus/motivations/arches_record"
 
 # # RefID - "The body object contains a 'RefId' identifier, represented here as the target id"
 # #   "The associated body resource (as part of a Web Annotation) contains a RefID (target resource).
@@ -84,57 +69,93 @@ slug_motivation = "https://data.getty.edu/thesaurus/motivations/arches_record"
 # refid_motivation = "https://data.getty.edu/local/thesaurus/motivations/contains-refid"
 
 # IIIF manifest of images
-iiif_manifest_images_motivation = "https://data.getty.edu/local/thesaurus/motivations/iiif_manifest_of"
+# iiif_manifest_images_motivation = "https://data.getty.edu/local/thesaurus/motivations/iiif_manifest_of"
 
 # IIIF manifest of HMO
-iiif_manifest_hmo_motivation = "https://data.getty.edu/local/thesaurus/motivations/iiif_hmo_manifest_of"
+# iiif_manifest_hmo_motivation = "https://data.getty.edu/local/thesaurus/motivations/iiif_hmo_manifest_of"
 
-hmo_image_motivation = "https://data.getty.edu/local/thesaurus/motivations/part_of"
+# hmo_image_motivation = "https://data.getty.edu/local/thesaurus/motivations/part_of"
+motivation_part_of = "https://data.getty.edu/local/thesaurus/motivations/part_of"
 
 
+# For testing and too easy delete
+group_id = "pilot-5folder-20231204"
 
-with open('pre-pilot-ids.csv', 'r') as csvfile:
+
+# TEST WITH THE FIRST ONE
+with open('pilot_test_ids_20231204.csv', 'r') as csvfile:
     datareader = csv.reader(csvfile)
     for row in datareader:
         data_row = row
-        print(data_row[4])
+        print(data_row)
+        # "refid","hmo","tif","dams"
+        # hmo_id = "urn:osprey:{}".format(data_row[2])
+        dams_uan = "urn:dams:{}".format(data_row[3])
+        # tif_iiif_manifest = data_row[6]
+        arches_record = "https://arches.jpcarchive.org/resources/{}".format(data_row[1])
+        aspace_refid = "urn:aspace:{}".format(data_row[0])
+        print(dams_uan, arches_record, aspace_refid)
+        # Oct 2023- Based on Ben's doc
+        #  All use DAMS as Generator 
+        # DAMS to Osprey - Needed?
+        # params = {
+                        # "body": {"id": dams_uan, "generator": dams_generator},
+                        # "target": {"id": hmo_id, "generator": osprey_generator},
+                        # "motivation": motivation_part_of
+                        # }
+        # r = requests.post("{}/id-management/links".format(settings.id_manager_url), json=params, headers=Headers)
+
+        # DAMS to ASpace
+        params = {
+                        "group_id": group_id,
+                        "body": {"id": dams_uan, "generator": dams_generator},
+                        "target": {"id": aspace_refid, "generator": aspace_generator},
+                        "motivation": motivation_part_of
+                        }
+        r = requests.post("{}/id-management/links".format(settings.id_manager_url), json=params, headers=Headers)
+
+        # DAMS to Arches
+        params = {
+                        "group_id": group_id,
+                        "body": {"id": dams_uan, "generator": dams_generator},
+                        "target": {"id": arches_record, "generator": arches_generator},
+                        "motivation": motivation_arches_record
+                        }
+        r = requests.post("{}/id-management/links".format(settings.id_manager_url), json=params, headers=Headers)
         #
-        hmo_id = "urn:osprey:{}".format(data_row[2])
-        dams_uan = "urn:dams:{}".format(data_row[4])
-        tif_iiif_manifest = data_row[6]
-        arches_record = "https://arches.jpcarchive.org/resources/{}".format(data_row[7])
-        aspace_refid = "urn:aspace:{}".format(data_row[5])
+        #
+        # OLDER VERSION:
         # hmo_iiif_manifest = data_row[8]
         #
         #HMO to DAMS
-        params = {
-                "body": {"id": hmo_id, "generator": osprey_generator},
-                "target": {"id": dams_uan, "generator": dams_generator},
-                "motivation": hmo_image_motivation
-                }
-        r = requests.post("{}/id-management/links".format(settings.id_manager_url), json=params, headers=Headers)
-        #
+        # params = {
+                        # "body": {"id": hmo_id, "generator": osprey_generator},
+                        # "target": {"id": dams_uan, "generator": dams_generator},
+                        # "motivation": hmo_image_motivation
+                        # }
+        # r = requests.post("{}/id-management/links".format(settings.id_manager_url), json=params, headers=Headers)
+
         # DAMS to IIIF Manifest of tifs
-        params = {
-                "body": {"id": dams_uan, "generator": dams_generator},
-                "target": {"id": tif_iiif_manifest, "generator": edan_generator},
-                "motivation": iiif_manifest_images_motivation
-                }
-        r = requests.post("{}/id-management/links".format(settings.id_manager_url), json=params, headers=Headers)
+        # params = {
+                        # "body": {"id": dams_uan, "generator": dams_generator},
+                        # "target": {"id": tif_iiif_manifest, "generator": edan_generator},
+                        # "motivation": iiif_manifest_images_motivation
+                        # }
+        # r = requests.post("{}/id-management/links".format(settings.id_manager_url), json=params, headers=Headers)
         #
         #HMO to arches
-        params = {
-                "body": {"id": hmo_id, "generator": osprey_generator},
-                "target": {"id": arches_record, "generator": arches_generator},
-                "motivation": "https://data.getty.edu/thesaurus/motivations/arches_record"
-                }
-        r = requests.post("{}/id-management/links".format(settings.id_manager_url), json=params, headers=Headers)
+        # params = {
+                        # "body": {"id": hmo_id, "generator": osprey_generator},
+                        # "target": {"id": arches_record, "generator": arches_generator},
+                        # "motivation": "https://data.getty.edu/thesaurus/motivations/arches_record"
+                        # }
+        # r = requests.post("{}/id-management/links".format(settings.id_manager_url), json=params, headers=Headers)
         #
         # Aspace - Connect the HMO ids to the ASpace RefID
-        params = {
-                "body": {"id": hmo_id, "generator": osprey_generator},
-                "target": {"id": aspace_refid, "generator": aspace_generator},
-                "motivation": aspace_motivation
-                }
-        r = requests.post("{}/id-management/links".format(settings.id_manager_url), json=params, headers=Headers)
+        # params = {
+                        # "body": {"id": hmo_id, "generator": osprey_generator},
+                        # "target": {"id": aspace_refid, "generator": aspace_generator},
+                        # "motivation": aspace_motivation
+                        # }
+        # r = requests.post("{}/id-management/links".format(settings.id_manager_url), json=params, headers=Headers)
         # IIIF of HMO

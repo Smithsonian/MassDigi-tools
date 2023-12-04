@@ -11,7 +11,7 @@ import json
 import uuid
 import sys
 
-import settings_arches as settings
+import settings_arches
 import archesapiclient
 
 # MySQL
@@ -27,8 +27,8 @@ The id is autocreated from arches when creating the model and doesn't change, un
 gets deleted and re-created.
 """
 
-GRAPH_ID: Final[str] = settings.graph_id
-ARCHES_ENDPOINT: str = settings.arches_api
+GRAPH_ID: Final[str] = settings_arches.graph_id
+ARCHES_ENDPOINT: str = settings_arches.arches_api
 
 RESOURCES_ENDPOINT: Final[str] = f"{ARCHES_ENDPOINT}/resources"
 RESOURCE_URL: Final[str] = f"{ARCHES_ENDPOINT}/resource"
@@ -36,9 +36,9 @@ RESOURCE_URL: Final[str] = f"{ARCHES_ENDPOINT}/resource"
 
 
 url = ARCHES_ENDPOINT
-client_id = settings.arches_api_clientid
-username = settings.arches_api_username
-password = settings.arches_api_password
+client_id = settings_arches.arches_api_clientid
+username = settings_arches.arches_api_username
+password = settings_arches.arches_api_password
 
 a_client = archesapiclient.ArchesClient(url, client_id, username, password)
 
@@ -82,8 +82,8 @@ cur.execute(query)
 
 data = cur.fetchall()
 
-query_insert = ("INSERT INTO jpc_massdigi_ids (id_relationship, id1_value, id2_value) "
-           "VALUES ('hmo_arches', %(hmo)s, %(arches)s)")
+# query_insert = ("INSERT INTO jpc_massdigi_ids (id_relationship, id1_value, id2_value) "
+#            "VALUES ('hmo_arches', %(hmo)s, %(arches)s)")
 
 
 for row in data:
@@ -93,10 +93,10 @@ for row in data:
     # Get filename from db to get sequence
     cur.execute("SELECT id2_value from jpc_massdigi_ids WHERE id1_value = %(hmo_id)s", {'hmo_id': hmo_id})
 
-    res = cur.fetchall()   
+    res = cur.fetchall()
 
     # Convert id
-    id = "https://data.jpcarchive.org/{}".format(hmo_id)
+    id = "https://arches.jpcarchive.org/{}".format(hmo_id)
 
     # # TO EXPAND
     # Get title, box, and folder of HMO from folder title in database
@@ -105,40 +105,29 @@ for row in data:
     #   box_no = "BI-001A"
     #   folder_no = "001"
     title = row['unit_title']
-    folder_no = row['archive_folder']
-    box_no = row['archive_box']
-    sequence = #################
+    # folder_no = row['archive_folder']
+    # box_no = row['archive_box']
+    sequence = int(title[-4:])
     
-    if box_no != "":
-        title = "{} - Box {}".format(title, box_no)
-    
-    if folder_no != "":
-        title = "{} Folder {}".format(title, folder_no)
-
     # Read data model from file
-    f = open('jpc_data_model4.json')
+    f = open('jpc_data_model_20231130.json')
     json_data_model = json.load(f)
     f.close()
 
-    # Replace values of TITLE
+    # Replace values in json
+    json_data_model['id'] = f"https://arches.jpcarchive.org/object/{hmo_id}"
     json_data_model['_label'] = title
     json_data_model['identified_by'][0]['content'] = title
+    json_data_model['identified_by'][0]['id'] = "https://arches.jpcarchive.org/object/{}/name/1".format(hmo_id)
+    json_data_model['assigned_by'][0]['id'] = "https://arches.jpcarchive.org/object/{}/sequence-assignment".format(hmo_id)
+    json_data_model['assigned_by'][0]['assigned'][0]['id'] = "https://arches.jpcarchive.org/object/{}/sequence-position".format(hmo_id)
+    json_data_model['assigned_by'][0]['assigned'][0]['value'] = sequence
 
-    resource_id = uuid.uuid3(uuid.NAMESPACE_URL, id)
-    #json_data_model['id'] = f"urn:uuid:{resource_id}"
-    json_data_model['id'] = f"https://data.jpcarchive.org/object/{resource_id}"
-    json_data_model['identified_by'][0]['id'] = f"https://data.jpcarchive.org/object/{resource_id}/name/1"
+    record_id = a_client.put_record(graph_id=GRAPH_ID, data=json_data_model, rec_id=hmo_id)
 
-    response = requests.put(
-        f"{RESOURCES_ENDPOINT}/{GRAPH_ID}/{resource_id}",
-        data=json.dumps(json_data_model),
-        params=(("format", "json-ld"), ("indent", 4)),
-        headers={"Authorization": f"Bearer {a.access_token}"},
-    )
+    print(hmo_id)
 
-    print(response.status_code)
-
-    cur.execute(query_insert, {'hmo': hmo_id, 'arches': str(resource_id)})
+    # cur.execute(query_insert, {'hmo': hmo_id, 'arches': str(resource_id)})
 
 
 cur.close()

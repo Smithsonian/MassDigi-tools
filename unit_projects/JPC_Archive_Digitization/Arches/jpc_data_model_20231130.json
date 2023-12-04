@@ -1,0 +1,82 @@
+{
+  "@context": "https://linked.art/ns/v1/linked-art.json",
+  "id": "https://data.jpcarchive.org/object/00000000-0000-0000-0000-000000000000",
+  "type": "HumanMadeObject",
+  "_label": "Burpee Seed Contest, 1924 - Box 271, Folder 10",
+  "classified_as": [
+    {
+      "id": "http://vocab.getty.edu/aat/300046300",
+      "type": "Type",
+      "_label": "photographs"
+    },
+    {
+      "id": "http://vocab.getty.edu/aat/300127104",
+      "type": "Type",
+      "_label": "photographic prints"
+    }
+  ],
+  "identified_by": [
+    {
+      "id": "https://data.jpcarchive.org/object/00000000-0000-0000-0000-000000000000/name/1",
+      "type": "Name",
+      "_label": "Primary Title",
+      "classified_as": [
+        {
+          "id": "http://vocab.getty.edu/aat/300417193",
+          "type": "Type",
+          "_label": "Titles (General, Names)"
+        }
+      ],
+      "content": "Burpee Seed Contest, 1924 - Box 271, Folder 10"
+    }
+  ],
+  "assigned_by": [
+    {
+      "id": "https://data.jpcarchive.org/object/00000000-0000-0000-0000-000000000000/sequence-assignment",
+      "type": "AttributeAssignment",
+      "_label": "Related Media Sequence Assignment",
+      "used_specific_object": [
+        {
+          "type": "Set",
+          "_label": "Item order for urn:aspace:12fef2f2ef1fe1",
+          "refers_to": [
+            {
+              "type": "InformationObject",
+              "identified_by": [
+                {
+                  "type": "Identifier",
+                  "content": "12fef2f2ef1fe1"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "assigned": [
+        {
+          "id": "https://data.jpcarchive.org/object/00000000-0000-0000-0000-000000000000/sequence-position",
+          "type": "Dimension",
+          "_label": "Related Media Sequence",
+          "classified_as": [
+            {
+              "id": "http://vocab.getty.edu/aat/300010269",
+              "type": "Type",
+              "_label": "Positional Attributes"
+            },
+            {
+              "id": "http://vocab.getty.edu/aat/300192339",
+              "type": "Type",
+              "_label": "Sequences"
+            }
+          ],
+          "value": 1,
+          "unit": {
+            "id": "http://vocab.getty.edu/aat/300055665",
+            "type": "MeasurementUnit",
+            "_label": "Numbers"
+          }
+        }
+      ]
+    }
+  ]
+}
