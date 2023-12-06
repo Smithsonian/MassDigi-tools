@@ -91,9 +91,8 @@ for row in data:
     hmo_id = row['hmo']
 
     # Get filename from db to get sequence
-    cur.execute("SELECT id2_value from jpc_massdigi_ids WHERE id1_value = %(hmo_id)s", {'hmo_id': hmo_id})
-
-    res = cur.fetchall()
+    # cur.execute("SELECT id2_value from jpc_massdigi_ids WHERE id_relationship = 'hmo_tif' and id1_value = %(hmo_id)s", {'hmo_id': hmo_id})
+    # res = cur.fetchall()
 
     # Convert id
     id = "https://arches.jpcarchive.org/{}".format(hmo_id)
@@ -108,7 +107,8 @@ for row in data:
     # folder_no = row['archive_folder']
     # box_no = row['archive_box']
     sequence = int(title[-4:])
-    
+    refid = row['refid']
+
     # Read data model from file
     f = open('jpc_data_model_20231130.json')
     json_data_model = json.load(f)
@@ -122,6 +122,8 @@ for row in data:
     json_data_model['assigned_by'][0]['id'] = "https://arches.jpcarchive.org/object/{}/sequence-assignment".format(hmo_id)
     json_data_model['assigned_by'][0]['assigned'][0]['id'] = "https://arches.jpcarchive.org/object/{}/sequence-position".format(hmo_id)
     json_data_model['assigned_by'][0]['assigned'][0]['value'] = sequence
+    json_data_model['assigned_by'][0]['used_specific_object'][0]['_label'] = "Item order for urn:aspace:{}".format(refid)
+    json_data_model['assigned_by'][0]['used_specific_object'][0]['refers_to'][0]['identified_by'][0]['content'] = refid
 
     record_id = a_client.put_record(graph_id=GRAPH_ID, data=json_data_model, rec_id=hmo_id)
 
