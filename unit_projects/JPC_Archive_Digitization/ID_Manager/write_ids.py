@@ -2,7 +2,7 @@
 #
 # Write IDs to Getty's ID Manager
 
-# Ver 2023-12-04
+# Ver 2023-12-18
 
 import json
 import requests
@@ -79,7 +79,7 @@ motivation_part_of = "https://data.getty.edu/local/thesaurus/motivations/part_of
 
 
 # For testing and too easy delete
-group_id = "pilot-5folder-20231204"
+group_id = "pilot-5folder-20231218"
 
 
 # TEST WITH THE FIRST ONE

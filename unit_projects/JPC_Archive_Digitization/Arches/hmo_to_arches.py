@@ -68,7 +68,7 @@ query = ("""
             with data as (SELECT id1_value as refid, id2_value as hmo FROM dpo_osprey.jpc_massdigi_ids 
 					where id_relationship = 'refid_hmo') 
              select d.*, 
-             concat(j.unit_title, ' - Box ', j.archive_box, ' Folder ', j.archive_folder, ' Image ', 
+             concat(j.unit_title, ' - Box ', j.archive_box, ' Folder ', j.archive_folder, ' Item ', 
              		LPAD(	
              		row_number() over (partition by refid order by d.refid, hmo),
              		4, '0')
@@ -110,7 +110,7 @@ for row in data:
     refid = row['refid']
 
     # Read data model from file
-    f = open('jpc_data_model_20231130.json')
+    f = open('jpc_data_model_20231218.json')
     json_data_model = json.load(f)
     f.close()
 

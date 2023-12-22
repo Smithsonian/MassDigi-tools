@@ -99,84 +99,90 @@ for resource in list_resources:
 
     # Run the hierarchy, c01 -> c02 -> c03
     for c01_item in c01_list:
-        # iterate child elements of item
-        unit_title = c01_item.find('.//' + ns + 'did/' + ns + 'unittitle').text
-        c02_items = c01_item.findall('.//' + ns + 'c02')
-        for c02_item in c02_items:
-            try:
-                fol_type = c02_item.find('.//' + ns + 'did/' + ns + 'unittitle').text
-            except AttributeError:
-                continue
-            # try:
-            #     refid = c02_item.find('.//' + ns + 'c03').attrib['id'].replace('aspace_', '')
-            #     # Get URL
-            #     r = requests.get(
-            #         "{}/repositories/2/find_by_id/archival_objects?ref_id[]={};resolve[]=archival_objects".format(
-            #             settings.aspace_api, refid), headers=Headers)
-            #     object_json = json.loads(r.text)
-            #     uri = object_json['archival_objects'][0]['ref']
-            # except AttributeError:
-            #     print("120")
-            #     continue
-            # except IndexError:
-            #     print("123")
-            #     continue
-            try:
-                c03_items = c02_item.findall('.//' + ns + 'c03')
-            except AttributeError:
-                continue
-            for c03_item in c03_items:
-                # refid = c03_item.find('.//' + ns + 'c03').attrib['id'].replace('aspace_', '')
-                refid = c03_item.attrib['id'].replace('aspace_', '')
-                # Get URL
-                r = requests.get(
-                    "{}/repositories/2/find_by_id/archival_objects?ref_id[]={};resolve[]=archival_objects".format(
-                        settings.aspace_api, refid), headers=Headers)
-                object_json = json.loads(r.text)
-                uri = object_json['archival_objects'][0]['ref']
+        try:
+            # iterate child elements of item
+            unit_title = c01_item.find('.//' + ns + 'did/' + ns + 'unittitle').text
+            c02_items = c01_item.findall('.//' + ns + 'c02')
+            for c02_item in c02_items:
                 try:
-                    archive_box = c03_item.find('.//' + ns + 'did/' + ns + 'container[@type="box"]').text
+                    fol_type = c02_item.find('.//' + ns + 'did/' + ns + 'unittitle').text
                 except AttributeError:
+                    print("109")
+                    continue
+                # try:
+                #     refid = c02_item.find('.//' + ns + 'c03').attrib['id'].replace('aspace_', '')
+                #     # Get URL
+                #     r = requests.get(
+                #         "{}/repositories/2/find_by_id/archival_objects?ref_id[]={};resolve[]=archival_objects".format(
+                #             settings.aspace_api, refid), headers=Headers)
+                #     object_json = json.loads(r.text)
+                #     uri = object_json['archival_objects'][0]['ref']
+                # except AttributeError:
+                #     print("120")
+                #     continue
+                # except IndexError:
+                #     print("123")
+                #     continue
+                try:
+                    c03_items = c02_item.findall('.//' + ns + 'c03')
+                except AttributeError:
+                    print("128")
+                    continue
+                for c03_item in c03_items:
+                    # refid = c03_item.find('.//' + ns + 'c03').attrib['id'].replace('aspace_', '')
+                    refid = c03_item.attrib['id'].replace('aspace_', '')
+                    # Get URL
+                    r = requests.get(
+                        "{}/repositories/2/find_by_id/archival_objects?ref_id[]={};resolve[]=archival_objects".format(
+                            settings.aspace_api, refid), headers=Headers)
+                    object_json = json.loads(r.text)
+                    uri = object_json['archival_objects'][0]['ref']
                     try:
-                        archive_box = c03_item.find('.//' + ns + 'did/' + ns + 'container[@type="Hollinger"]').text
+                        archive_box = c03_item.find('.//' + ns + 'did/' + ns + 'container[@type="box"]').text
                     except AttributeError:
                         try:
-                            archive_box = c03_item.find('.//' + ns + 'did/' + ns + 'container[@type="Clamshell"]').text
+                            archive_box = c03_item.find('.//' + ns + 'did/' + ns + 'container[@type="Hollinger"]').text
                         except AttributeError:
                             try:
-                                archive_box = c03_item.find(
-                                    './/' + ns + 'did/' + ns + 'container[@type="Short Lid"]').text
+                                archive_box = c03_item.find('.//' + ns + 'did/' + ns + 'container[@type="Clamshell"]').text
                             except AttributeError:
                                 try:
                                     archive_box = c03_item.find(
-                                        './/' + ns + 'did/' + ns + 'container[@type="Binder"]').text
+                                        './/' + ns + 'did/' + ns + 'container[@type="Short Lid"]').text
                                 except AttributeError:
-                                    archive_box = ""
-                try:
-                    archive_folder = c03_item.find('.//' + ns + 'did/' + ns + 'container[@type="folder"]').text
-                except AttributeError:
-                    archive_folder = ""
+                                    try:
+                                        archive_box = c03_item.find(
+                                            './/' + ns + 'did/' + ns + 'container[@type="Binder"]').text
+                                    except AttributeError:
+                                        archive_box = ""
+                    try:
+                        archive_folder = c03_item.find('.//' + ns + 'did/' + ns + 'container[@type="folder"]').text
+                    except AttributeError:
+                        archive_folder = ""
 
-                print(
-                    "{} - {}:{}:{}:{}:{} ({})".format(i, unit_title, fol_type, archive_box, archive_folder, refid, uri))
-                table_id = uuid.uuid4()
-                i += 1
-                cur.execute("INSERT INTO jpc_aspace_data "
-                            "   (table_id, resource_id, refid, archive_box, archive_type, archive_folder, unit_title, url) "
-                            "   VALUES "
-                            "   (%(table_id)s, %(resource_id)s, %(refid)s, %(archive_box)s, %(archive_type)s, %(archive_folder)s, %(unit_title)s, %(url)s)"
-                            "   ON DUPLICATE KEY UPDATE archive_box = %(archive_box)s, archive_type = %(archive_type)s, archive_folder = %(archive_folder)s, unit_title = %(unit_title)s",
-                            {
-                                'table_id': table_id,
-                                'resource_id': resource_id,
-                                'refid': refid,
-                                'archive_box': archive_box,
-                                'archive_type': fol_type,
-                                'archive_folder': archive_folder,
-                                'unit_title': unit_title,
-                                'url': "{}{}".format(settings.public_aspace, uri)
-                            })
-
+                    print(
+                        "{} - {}:{}:{}:{}:{} ({})".format(i, unit_title, fol_type, archive_box, archive_folder, refid, uri))
+                    table_id = uuid.uuid4()
+                    i += 1
+                    cur.execute("INSERT INTO jpc_aspace_data "
+                                "   (table_id, resource_id, refid, archive_box, archive_type, archive_folder, unit_title, url) "
+                                "   VALUES "
+                                "   (%(table_id)s, %(resource_id)s, %(refid)s, %(archive_box)s, %(archive_type)s, %(archive_folder)s, %(unit_title)s, %(url)s)"
+                                "   ON DUPLICATE KEY UPDATE archive_box = %(archive_box)s, archive_type = %(archive_type)s, archive_folder = %(archive_folder)s, unit_title = %(unit_title)s",
+                                {
+                                    'table_id': table_id,
+                                    'resource_id': resource_id,
+                                    'refid': refid,
+                                    'archive_box': archive_box,
+                                    'archive_type': fol_type,
+                                    'archive_folder': archive_folder,
+                                    'unit_title': unit_title,
+                                    'url': "{}{}".format(settings.public_aspace, uri)
+                                })
+        except:
+            print("Error with {}".format(unit_title))
+            continue
 
 cur.close()
 conn.close()
+
