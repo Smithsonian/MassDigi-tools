@@ -10,6 +10,10 @@ from pydantic import BaseModel
 import json
 import uuid
 import sys
+import os
+import logging
+from time import strftime
+from time import localtime
 
 import settings_arches
 import archesapiclient
@@ -19,6 +23,18 @@ import pymysql
 
 import settings
 
+
+
+# Logging
+current_time = strftime("%Y%m%d_%H%M%S", localtime())
+
+logfile = 'arches_{}.log'.format(current_time)
+logging.basicConfig(filename=logfile, filemode='a', level=logging.DEBUG,
+                    format='%(levelname)s | %(asctime)s | %(filename)s:%(lineno)s | %(message)s',
+                    datefmt='%y-%b-%d %H:%M:%S')
+logger = logging.getLogger("arches")
+
+logger.info("Starting script on {}".format(current_time))
 
 """
 The Graph in arches is as explained here https://arches.readthedocs.io/en/7.2/data-model/?highlight=graph#graph-definition
@@ -59,28 +75,48 @@ except pymysql.Error as e:
     print(e)
     sys.exit(1)
 
+logger.info("Connected to db")
 
 # Run query
 # query = ("with data as (SELECT id1_value as refid, id2_value as hmo FROM dpo_osprey.jpc_massdigi_ids where id_relationship = 'refid_hmo') "
 #             " select d.*, j.unit_title, j.archive_box, j.archive_folder "
 #             " from data d, jpc_aspace_data j where d.refid=j.refid")
+## Fake item number for TESTING
+# query = ("""
+#             with data as (SELECT id1_value as refid, id2_value as hmo FROM dpo_osprey.jpc_massdigi_ids 
+# 					where id_relationship = 'refid_hmo') 
+#              select d.*, 
+#              concat(j.unit_title, ' - Box ', j.archive_box, ' Folder ', j.archive_folder, ' Item ', 
+#              		LPAD(	
+#              		row_number() over (partition by refid order by d.refid, hmo),
+#              		4, '0')
+#              			) as unit_title, 
+#              j.archive_box, j.archive_folder 
+#              from data d, jpc_aspace_data j where d.refid=j.refid
+#              order by unit_title
+#              """)
+
 query = ("""
-            with data as (SELECT id1_value as refid, id2_value as hmo FROM dpo_osprey.jpc_massdigi_ids 
-					where id_relationship = 'refid_hmo') 
+    with data as (
+	SELECT id1_value as refid, id2_value as hmo FROM dpo_osprey.jpc_massdigi_ids 
+					where id_relationship = 'refid_hmo'
+				),
+	data2 as (select id1_value as hmo, SUBSTRING_INDEX(SUBSTRING_INDEX(id2_value , '_', -2), '_', 1) as item FROM dpo_osprey.jpc_massdigi_ids 
+					where id_relationship = 'hmo_tif' group by hmo, item)
              select d.*, 
              concat(j.unit_title, ' - Box ', j.archive_box, ' Folder ', j.archive_folder, ' Item ', 
-             		LPAD(	
-             		row_number() over (partition by refid order by d.refid, hmo),
-             		4, '0')
+             		d2.item
              			) as unit_title, 
-             j.archive_box, j.archive_folder 
-             from data d, jpc_aspace_data j where d.refid=j.refid
-             order by unit_title
-             """)
+             j.archive_box, j.archive_folder, d2.item
+             from data d, data2 d2, jpc_aspace_data j where d.refid=j.refid
+             and d.hmo=d2.hmo
+    """)
 
 cur.execute(query)
 
 data = cur.fetchall()
+
+logger.info("Got {} records".format(len(data)))
 
 # query_insert = ("INSERT INTO jpc_massdigi_ids (id_relationship, id1_value, id2_value) "
 #            "VALUES ('hmo_arches', %(hmo)s, %(arches)s)")
@@ -89,6 +125,7 @@ data = cur.fetchall()
 for row in data:
     # Get HMO ID from database
     hmo_id = row['hmo']
+    logger.info("Working on HMO: {}".format(hmo_id))
 
     # Get filename from db to get sequence
     # cur.execute("SELECT id2_value from jpc_massdigi_ids WHERE id_relationship = 'hmo_tif' and id1_value = %(hmo_id)s", {'hmo_id': hmo_id})
@@ -127,10 +164,15 @@ for row in data:
 
     record_id = a_client.put_record(graph_id=GRAPH_ID, data=json_data_model, rec_id=hmo_id)
 
+    logger.info("HMO {} saved".format(hmo_id))
     print(hmo_id)
 
     # cur.execute(query_insert, {'hmo': hmo_id, 'arches': str(resource_id)})
 
+
+current_time = strftime("%Y%m%d_%H%M%S", localtime())
+
+logger.info("Script finished on {}".format(current_time))
 
 cur.close()
 conn.close()
