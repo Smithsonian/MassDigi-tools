@@ -139,6 +139,8 @@ for resource in list_resources:
                     uri = object_json['archival_objects'][0]['ref']
                     creation_time = object_json['archival_objects'][0]['_resolved']['create_time']
                     creation_date = creation_time.split('T')[0]
+                    mod_date = object_json['archival_objects'][0]['_resolved']['user_mtime']
+                    mod_date = mod_date.split('T')[0]
                     try:
                         archive_box = c03_item.find('.//' + ns + 'did/' + ns + 'container[@type="box"]').text
                     except AttributeError:
@@ -167,9 +169,9 @@ for resource in list_resources:
                     table_id = uuid.uuid4()
                     i += 1
                     cur.execute("INSERT INTO jpc_aspace_data "
-                                "   (table_id, resource_id, refid, archive_box, archive_type, archive_folder, unit_title, url, creation_date) "
+                                "   (table_id, resource_id, refid, archive_box, archive_type, archive_folder, unit_title, url, creation_date, mod_date) "
                                 "   VALUES "
-                                "   (%(table_id)s, %(resource_id)s, %(refid)s, %(archive_box)s, %(archive_type)s, %(archive_folder)s, %(unit_title)s, %(url)s, %(creation_date)s)"
+                                "   (%(table_id)s, %(resource_id)s, %(refid)s, %(archive_box)s, %(archive_type)s, %(archive_folder)s, %(unit_title)s, %(url)s, %(creation_date)s, %(mod_date)s)"
                                 "   ON DUPLICATE KEY UPDATE archive_box = %(archive_box)s, archive_type = %(archive_type)s, archive_folder = %(archive_folder)s, unit_title = %(unit_title)s, creation_date = %(creation_date)s",
                                 {
                                     'table_id': table_id,
@@ -180,6 +182,7 @@ for resource in list_resources:
                                     'archive_folder': archive_folder,
                                     'unit_title': unit_title,
                                     'creation_date': creation_date,
+                                    'mod_date': mod_date,
                                     'url': "{}{}".format(settings.public_aspace, uri)
                                 })
         except:
