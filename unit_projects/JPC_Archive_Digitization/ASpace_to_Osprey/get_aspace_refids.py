@@ -163,16 +163,20 @@ for resource in list_resources:
                         archive_folder = c03_item.find('.//' + ns + 'did/' + ns + 'container[@type="folder"]').text
                     except AttributeError:
                         archive_folder = ""
-
+                    # Get Scope, mostly for sensitive contents
+                    try:
+                        scopecontent = c03_item.find('.//' + ns + 'scopecontent/' + ns + 'p').text
+                    except AttributeError:
+                        scopecontent = ""
                     print(
                         "{} - {}:{}:{}:{}:{} ({})".format(i, unit_title, fol_type, archive_box, archive_folder, refid, uri))
                     table_id = uuid.uuid4()
                     i += 1
                     cur.execute("INSERT INTO jpc_aspace_data "
-                                "   (table_id, resource_id, refid, archive_box, archive_type, archive_folder, unit_title, url, creation_date, mod_date) "
+                                "   (table_id, resource_id, refid, archive_box, archive_type, archive_folder, unit_title, url, creation_date, mod_date, scopecontent) "
                                 "   VALUES "
-                                "   (%(table_id)s, %(resource_id)s, %(refid)s, %(archive_box)s, %(archive_type)s, %(archive_folder)s, %(unit_title)s, %(url)s, %(creation_date)s, %(mod_date)s)"
-                                "   ON DUPLICATE KEY UPDATE archive_box = %(archive_box)s, archive_type = %(archive_type)s, archive_folder = %(archive_folder)s, unit_title = %(unit_title)s, creation_date = %(creation_date)s",
+                                "   (%(table_id)s, %(resource_id)s, %(refid)s, %(archive_box)s, %(archive_type)s, %(archive_folder)s, %(unit_title)s, %(url)s, %(creation_date)s, %(mod_date)s, %(scopecontent)s)"
+                                "   ON DUPLICATE KEY UPDATE archive_box = %(archive_box)s, archive_type = %(archive_type)s, archive_folder = %(archive_folder)s, unit_title = %(unit_title)s, creation_date = %(creation_date)s, scopecontent = %(scopecontent)s",
                                 {
                                     'table_id': table_id,
                                     'resource_id': resource_id,
@@ -183,6 +187,7 @@ for resource in list_resources:
                                     'unit_title': unit_title,
                                     'creation_date': creation_date,
                                     'mod_date': mod_date,
+                                    'scopecontent': scopecontent,
                                     'url': "{}{}".format(settings.public_aspace, uri)
                                 })
         except:
