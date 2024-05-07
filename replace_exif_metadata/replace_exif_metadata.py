@@ -19,7 +19,6 @@ from time import localtime
 import multiprocessing
 from p_tqdm import p_map
 
-
 #Check args
 if len(sys.argv) != 3:
     sys.exit("Missing args")
@@ -27,20 +26,14 @@ if len(sys.argv) != 3:
 folder_to_process = sys.argv[1]
 no_workers = sys.argv[2]
 
-
-
 #Test code:
-# exiftool -Keywords="NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides" -Subject="NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides" -m -overwrite_original export/sinaa_1975_15_00C2_003-009.tif
-
+# exiftool -Keywords="NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides" -Subject="NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides" -m -overwrite_original sinaa_1975_15_00C2_003-009.tif
 
 ##Save current directory
 script_dir = os.getcwd()
-    
 
 
 def replace_exif(filename):
-    dest = shutil.copy(filename, 'export/')
-    #Get irn
     p = subprocess.Popen(["exiftool", "-Keywords=\"NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides\"", "-Subject=\"NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides\"", "-m", "-overwrite_original", filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (out,err) = p.communicate()
     if p.returncode != 0:
@@ -63,7 +56,6 @@ def main():
 ############################################
 if __name__=="__main__":
     main()
-
 
 
 sys.exit(0)
