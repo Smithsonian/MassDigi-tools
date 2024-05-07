@@ -34,7 +34,7 @@ script_dir = os.getcwd()
 
 
 def replace_exif(filename):
-    p = subprocess.Popen(["exiftool", "-Keywords=\"NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides\"", "-Subject=\"NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides\"", "-m", "-overwrite_original", filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(["exiftool", "-Keywords=NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides", "-Subject=NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides", "-m", "-overwrite_original", filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (out,err) = p.communicate()
     if p.returncode != 0:
         print("Error with image {}: {} - {}".format(filename, out, err))
