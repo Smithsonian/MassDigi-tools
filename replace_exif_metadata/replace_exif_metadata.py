@@ -28,6 +28,7 @@ folder_to_process = sys.argv[1]
 no_workers = sys.argv[2]
 
 
+
 #Test code:
 # exiftool -Keywords="NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides" -Subject="NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides" -m -overwrite_original export/sinaa_1975_15_00C2_003-009.tif
 
@@ -40,7 +41,7 @@ script_dir = os.getcwd()
 def replace_exif(filename):
     dest = shutil.copy(filename, 'export/')
     #Get irn
-    p = subprocess.Popen(["exiftool", "-Keywords=\"NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides\"", "-Subject=\"NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides\"", "-m", "-overwrite_original", "export/{}".format(filename)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p = subprocess.Popen(["exiftool", "-Keywords=\"NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides\"", "-Subject=\"NAA.1975-15; Canela (Ramkokamekrá); Apanyekrá: Kanela; Maranhão; Brazil; Bill Crocker; Myles Crocker; 35mm slides\"", "-m", "-overwrite_original", filename], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     (out,err) = p.communicate()
     if p.returncode != 0:
         print("Error with image {}: {} - {}".format(filename, out, err))
@@ -50,10 +51,8 @@ def replace_exif(filename):
 
 def main():
     os.chdir(folder_to_process)
-    if not os.path.exists('export'):
-        os.makedirs('export')
     files = glob.glob("*.tif")
-    logging.info("Found {} files in folder".format(len(files)))
+    print("Found {} files in folder".format(len(files)))
     results = p_map(replace_exif, files, **{"num_cpus": int(no_workers)})
     os.chdir(script_dir)
     return
