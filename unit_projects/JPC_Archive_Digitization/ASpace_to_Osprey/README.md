@@ -4,7 +4,6 @@
 
 Script to gather all RefId's from ASpace and store them in the Osprey database. 
 
-### Current Status: Pre-Pilot
+### Current Status: Prod
 
-The project is in testing phase and the code will change while we test the best approaches and workflows.
-
+The project is in production. The script may change to handle quirks in the ASpace data.
