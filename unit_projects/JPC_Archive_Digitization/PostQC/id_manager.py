@@ -3,16 +3,12 @@
 # Write IDs to Getty's ID Manager
 #  Get receipts to confirm all records exist as intended
 # 
-# Ver 2024-06-24
+# Ver 2024-07-18
 
 import json
 import requests
 import settings
-import csv
 import sys
-# from multiprocessing import Pool, cpu_count
-import numpy as np
-import re
 import urllib.parse
 
 import logging
@@ -270,7 +266,7 @@ for refid_row in list_refids:
     # return
 
 
-# process each refid in parallel
+# Process each refid in parallel
 # pool = Pool(NUM_CORES)
 # results = pool.map(sendids, list_refids)
 
@@ -323,6 +319,7 @@ for j in range(1, 1000):
             cur.execute(insert_post_proc, {'file_id': file_id, 'post_step': post_step, 'post_info': item_id})
 
 
+
 # Anything missing?
 # id_manager_aspace
 post_step = "id_manager_aspace"
@@ -332,8 +329,6 @@ if len(missing_files) > 0:
     cur.execute("INSERT INTO folders_badges (folder_id, badge_type, badge_css, badge_text) VALUES (%(folder_id)s, %(post_step)s, 'bg-danger', 'ID Manager-ASpace Error')", {'folder_id': folder_id, 'post_step': post_step})
     for mfile in missing_files:
         cur.execute("INSERT INTO file_postprocessing (file_id, post_step, post_results, post_info) VALUES (%(file_id)s, %(post_step)s, 1, 'ID Manager Failed') ON DUPLICATE KEY UPDATE post_results = 1, post_info = 'ID Manager Failed'", {'file_id': mfile['file_id'], 'post_step': post_step})
-
-
 
 # id_manager_arches
 post_step = "id_manager_arches"
