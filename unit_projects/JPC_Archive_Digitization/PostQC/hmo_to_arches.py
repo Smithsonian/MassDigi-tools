@@ -2,7 +2,9 @@
 # 
 # Create stub records in Arches
 # Script adapted from Getty-provided ingest script
-
+#
+# Ver 2024-07-18
+#
 import requests
 from typing import Final
 from pydantic import BaseModel
@@ -200,6 +202,7 @@ for refid in list_refids:
         logger.info("HMO {} saved".format(hmo_id))
         print(hmo_id)
         
+        # Get the record back to confirm it exists
         record = a_client.get_record(hmo_id)
 
         post_step = 'arches_record'
