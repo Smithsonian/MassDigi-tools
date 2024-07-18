@@ -1,0 +1,7 @@
+requests
+pandas
+PyLD
+pydantic
+faker
+typing
+pymysql

@@ -126,3 +126,5 @@ unit_projects/JPC_Archive_Digitization/Arches/NOV23_Tests/settings_arches.py
 unit_projects/JPC_Archive_Digitization/Arches/arches_api_client-main.zip
 .Rproj.user
 *.xml
+*.gz
+unit_projects/JPC_Archive_Digitization/draft_scripts/Arches/settings_arches.py

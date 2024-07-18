@@ -1,0 +1,12 @@
+
+aspace_api = "https://"
+aspace_api_username = ""
+aspace_api_password = ""
+public_aspace = ""
+graph_id = ""
+
+host = ""
+database = ""
+user = ""
+password = ""
+port =
