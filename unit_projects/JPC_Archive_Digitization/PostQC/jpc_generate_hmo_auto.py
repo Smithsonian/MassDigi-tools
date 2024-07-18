@@ -2,7 +2,7 @@
 #
 # Generate HMO IDs automatically after folder passes QC
 
-# Ver 2024-05-02
+# Ver 2024-06-24
 
 import settings
 import uuid
@@ -21,21 +21,25 @@ if len(sys.argv) != 2:
     sys.exit(1)
 
 
-project_folder = sys.argv[1]
-
+# Get folder ID or folder name
+try:
+    folder_id = int(sys.argv[1])
+    project_folder = None
+except ValueError as e:
+    folder_id = None
+    project_folder = int(sys.argv[1])
 
 
 # Logging
 current_time = strftime("%Y%m%d_%H%M%S", localtime())
 
-logfile = 'generatehmo_{}.log'.format(current_time)
+logfile = 'logs/generatehmo_{}.log'.format(current_time)
 logging.basicConfig(filename=logfile, filemode='a', level=logging.DEBUG,
                     format='%(levelname)s | %(asctime)s | %(filename)s:%(lineno)s | %(message)s',
                     datefmt='%y-%b-%d %H:%M:%S')
 logger = logging.getLogger("hmo")
 
 logger.info("Starting script on {}".format(current_time))
-
 
 
 # Database
@@ -57,8 +61,14 @@ except pymysql.Error as e:
 
 logger.info("Connected to db")
 
-query = "SELECT * FROM folders WHERE project_id = 201 and project_folder = %(project_folder)s"
-cur.execute(query, {'project_folder': project_folder})
+
+if folder_id is None:
+    query = "SELECT * FROM folders WHERE project_id = 201 and project_folder = %(project_folder)s"
+    cur.execute(query, {'project_folder': project_folder})
+else:
+    query = "SELECT * FROM folders WHERE project_id = 201 and folder_id = %(folder_id)s"
+    cur.execute(query, {'folder_id': folder_id})
+
 folder_info = cur.fetchall()[0]
 folder_id = folder_info['folder_id']
 logger.info("folder_id: {}".format(folder_id))
@@ -110,11 +120,9 @@ for refid in list_refids:
             query = "SELECT file_id, file_name, dams_uan from files where folder_id = {} and file_name like '{}_%'".format(folder_id, object['sequence'])
             cur.execute(query)
             files = cur.fetchall()
-
             for file in files:
                 # Write the HMO id to the filename
                 id_relationship = "hmo_tif"
-
                 cur.execute(insert_query,
                                 {
                                     'id_relationship': id_relationship,
@@ -124,7 +132,6 @@ for refid in list_refids:
             
                 # Relationship between the tif and DAMS UAN
                 id_relationship = "tif_dams"
-
                 cur.execute(insert_query,
                                 {
                                     'id_relationship': id_relationship,
@@ -133,6 +140,6 @@ for refid in list_refids:
                                 })
     else:
         logger.error("refid not found: {}".format(refid))
-        
+
 cur.close()
 conn.close()

@@ -78,7 +78,7 @@ for resource in list_resources:
     resource_title = resource['title']
     resource_tree = resource['tree']['ref']
     logger.info("Resource ID: {}".format(resource_id))
-    table_id = uuid.uuid4()
+    table_id = str(uuid.uuid4())
     cur.execute("INSERT INTO jpc_aspace_resources "
                 "   (table_id, resource_id, repository_id, resource_title, resource_tree) "
                 "VALUES "
@@ -96,9 +96,7 @@ for resource in list_resources:
         "{}{}/resource_descriptions/{}.xml?include_unpublished=false&include_daos=true&numbered_cs=true&logger.info_pdf=false&ead3=false".format(
             settings.aspace_api, repository_id, resource_tree.split('/')[4]), headers=Headers)
 
-    if r.status_code == 200:
-        logger.info("Got {} records from:\n  {}\n".format(len(c01_list), r.request.url))
-    else:
+    if r.status_code != 200:
         logger.info("There was an error: {}".format(r.reason))
         sys.exit(1)
 
@@ -186,7 +184,7 @@ for resource in list_resources:
                     scopecontent = ""
                 logger.info(
                     "{}-{}:{}:{}:{}:{} ({})".format(i, unit_title, fol_type, archive_box, archive_folder, refid, uri))
-                table_id = uuid.uuid4()
+                table_id = str(uuid.uuid4())
                 i += 1
                 cur.execute("INSERT INTO jpc_aspace_data "
                             "   (table_id, resource_id, refid, archive_box, archive_type, archive_folder, unit_title, url, creation_date, mod_date, scopecontent) "

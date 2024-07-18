@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+# 
 # Create stub records in Arches
 # Script adapted from Getty-provided ingest script
 
@@ -27,7 +27,7 @@ import settings
 # Logging
 current_time = strftime("%Y%m%d_%H%M%S", localtime())
 
-logfile = 'arches_{}.log'.format(current_time)
+logfile = 'logs/arches_{}.log'.format(current_time)
 logging.basicConfig(filename=logfile, filemode='a', level=logging.DEBUG,
                     format='%(levelname)s | %(asctime)s | %(filename)s:%(lineno)s | %(message)s',
                     datefmt='%y-%b-%d %H:%M:%S')
@@ -42,9 +42,13 @@ if len(sys.argv) != 2:
     logger.error("Missing folder name")
     sys.exit(1)
 
-
-project_folder = sys.argv[1]
-
+# Get folder ID or folder name
+try:
+    folder_id = int(sys.argv[1])
+    project_folder = None
+except ValueError as e:
+    folder_id = None
+    project_folder = int(sys.argv[1])
 
 
 """
@@ -92,10 +96,27 @@ logger.info("Connected to db")
 
 query = "SELECT * FROM folders WHERE project_id = 201 and project_folder = %(project_folder)s"
 cur.execute(query, {'project_folder': project_folder})
-folder_info = cur.fetchall()[0]
 
 
 
+# Get folder from JPCA
+#   only if QC Passed and it has been delivered to DAMS
+if folder_id is None:
+    query = "SELECT * FROM folders WHERE project_id = 201 and project_folder = %(project_folder)s"
+    cur.execute(query, {'project_folder': project_folder})
+else:
+    query = "SELECT * FROM folders WHERE project_id = 201 and folder_id = %(folder_id)s"
+    cur.execute(query, {'folder_id': folder_id})
+
+
+folder_info = cur.fetchall()
+
+if len(folder_info) == 0:
+    logger.error("Folder not found: {} {}".format(folder_id, project_folder))
+    sys.exit("Folder not found: {} {}".format(folder_id, project_folder))
+
+
+folder_info = folder_info[0]
 
 get_refids = """SELECT 
                     distinct SUBSTRING_INDEX(f.file_name, '_', 1) as refid 
@@ -118,8 +139,6 @@ for refid in list_refids:
     refid = refid['refid']
     logger.info("refid: {}".format(refid))
 
-
-
     query = ("""
         with data as (
         SELECT id1_value as refid, id2_value as hmo FROM dpo_osprey.jpc_massdigi_ids 
@@ -137,19 +156,13 @@ for refid in list_refids:
         """)
 
     cur.execute(query, {'refid': refid})
-
     data = cur.fetchall()
-
     logger.info("Got {} records".format(len(data)))
 
     for row in data:
         # Get HMO ID from database
         hmo_id = row['hmo']
         logger.info("Working on HMO: {}".format(hmo_id))
-
-        # Get filename from db to get sequence
-        # cur.execute("SELECT id2_value from jpc_massdigi_ids WHERE id_relationship = 'hmo_tif' and id1_value = %(hmo_id)s", {'hmo_id': hmo_id})
-        # res = cur.fetchall()
 
         # Convert id
         id = "https://arches.jpcarchive.org/{}".format(hmo_id)
@@ -186,11 +199,20 @@ for refid in list_refids:
 
         logger.info("HMO {} saved".format(hmo_id))
         print(hmo_id)
+        
+        record = a_client.get_record(hmo_id)
+
+        post_step = 'arches_record'
+        if hmo_id in record['id']:
+            post_proc = "INSERT INTO file_postprocessing (file_id, post_step, post_results, post_info) (SELECT file_id, %(post_step)s, 0, concat('https://dev-arches.jpcarchive.org/report/', %(hmo_id)s) FROM files f WHERE SUBSTRING_INDEX(f.file_name, '_', 2) = concat(%(refid)s, '_', %(item)s)) ON DUPLICATE KEY UPDATE post_results = 0, post_info = concat('https://dev-arches.jpcarchive.org/report/', %(hmo_id)s)"
+            cur.execute(post_proc, {'folder_id': folder_info['folder_id'], 'post_step': post_step, 'hmo_id': hmo_id, 'refid': refid, 'item': row['item']})
+        else:
+            post_proc = "INSERT INTO file_postprocessing (file_id, post_step, post_results, post_info) (SELECT file_id, %(post_step)s, 1, concat('Arches record not found: https://dev-arches.jpcarchive.org/report/', %(hmo_id)s) FROM files f WHERE SUBSTRING_INDEX(f.file_name, '_', 2) = concat(%(refid)s, '_', %(item)s)) ON DUPLICATE KEY UPDATE post_results = 1, post_info = concat('Arches record not found: https://dev-arches.jpcarchive.org/report/', %(hmo_id)s)"
+            cur.execute(post_proc, {'folder_id': folder_info['folder_id'], 'post_step': post_step, 'hmo_id': hmo_id, 'refid': refid, 'item': row['item']})
+            cur.execute("INSERT INTO folders_badges (folder_id, badge_type, badge_css, badge_text) VALUES (%(folder_id)s, %(post_step)s, 'bg-danger', 'Arches Error')", {'folder_id': folder_info['folder_id'], 'post_step': post_step})
 
 
 
-post_proc = "INSERT INTO file_postprocessing (file_id, post_step, post_results) (SELECT file_id, %(post_step)s, 0 FROM files WHERE folder_id = %(folder_id)s) ON DUPLICATE KEY UPDATE post_results = 0"
-cur.execute(post_proc, {'folder_id': folder_info['folder_id'], 'post_step': 'arches_record'})
 
 
 current_time = strftime("%Y%m%d_%H%M%S", localtime())
