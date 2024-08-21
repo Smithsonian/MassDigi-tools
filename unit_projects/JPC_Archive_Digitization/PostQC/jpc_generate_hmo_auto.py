@@ -72,6 +72,7 @@ else:
 folder_info = cur.fetchall()[0]
 folder_id = folder_info['folder_id']
 logger.info("folder_id: {}".format(folder_id))
+print("Running in folder {}".format(folder_id))
 
 get_refids = """SELECT 
                     distinct SUBSTRING_INDEX(f.file_name, '_', 1) as refid 
@@ -93,7 +94,8 @@ list_refids = cur.fetchall()
 for refid in list_refids:
     refid = refid['refid']
     logger.info("refid: {}".format(refid))
-    
+    print("refid {}".format(refid))
+
     query = "SELECT * FROM jpc_aspace_data where refid = %(refid)s"
     cur.execute(query, {'refid': refid})
     refid_info = cur.fetchall()
