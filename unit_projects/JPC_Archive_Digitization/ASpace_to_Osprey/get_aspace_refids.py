@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 #
 # Get folders from ASpace and store the RefIDs
+#  v. 2024-08-21
+# 
 
 import json
 import requests
@@ -184,13 +186,44 @@ for resource in list_resources:
                     scopecontent = ""
                 logger.info(
                     "{}-{}:{}:{}:{}:{} ({})".format(i, unit_title, fol_type, archive_box, archive_folder, refid, uri))
+                # Content warning from ASpace
+                content_warnings_string = ""
+                try:
+                    content_warning = object_json['archival_objects'][0]['_resolved']['content_warnings']
+                    if len(content_warning) > 0:
+                        content_warnings = []
+                        for cwarning in content_warning:
+                            if cwarning['content_warning_code'] == "cw_animal":
+                                content_warnings.append("animal cruelty")
+                            elif cwarning['content_warning_code'] == "cw_childabuse":
+                                content_warnings.append("child abuse")
+                            elif cwarning['content_warning_code'] == "cw_birth":
+                                content_warnings.append("childbirth")
+                            elif cwarning['content_warning_code'] == "cw_crime":
+                                content_warnings.append("crime scenes")
+                            elif cwarning['content_warning_code'] == "cw_deceased":
+                                content_warnings.append("deceased persons")
+                            elif cwarning['content_warning_code'] == "cw_graphic":
+                                content_warnings.append("graphic injuries or violent content")
+                            elif cwarning['content_warning_code'] == "cw_medical":
+                                content_warnings.append("patients in hospitals or other medical facilities")
+                            elif cwarning['content_warning_code'] == "cw_records":
+                                content_warnings.append("medical records")
+                            elif cwarning['content_warning_code'] == "cw_nudity":
+                                content_warnings.append("nudity")
+                            elif cwarning['content_warning_code'] == "cw_minors":
+                                content_warnings.append("minors in potentially offensive and sensitive contexts")
+                        content_warnings_string = "Images might contain: {}".format(",".join(content_warnings))
+                    logger.info("content_warnings_string: {} ({})".format(content_warnings_string, refid))
+                except KeyError:
+                    content_warnings = ""
                 table_id = str(uuid.uuid4())
                 i += 1
                 cur.execute("INSERT INTO jpc_aspace_data "
-                            "   (table_id, resource_id, refid, archive_box, archive_type, archive_folder, unit_title, url, creation_date, mod_date, scopecontent) "
+                            "   (table_id, resource_id, refid, archive_box, archive_type, archive_folder, unit_title, url, creation_date, mod_date, scopecontent, content_warnings) "
                             "   VALUES "
-                            "   (%(table_id)s, %(resource_id)s, %(refid)s, %(archive_box)s, %(archive_type)s, %(archive_folder)s, %(unit_title)s, %(url)s, %(creation_date)s, %(mod_date)s, %(scopecontent)s)"
-                            "   ON DUPLICATE KEY UPDATE archive_box = %(archive_box)s, archive_type = %(archive_type)s, archive_folder = %(archive_folder)s, unit_title = %(unit_title)s, creation_date = %(creation_date)s, scopecontent = %(scopecontent)s",
+                            "   (%(table_id)s, %(resource_id)s, %(refid)s, %(archive_box)s, %(archive_type)s, %(archive_folder)s, %(unit_title)s, %(url)s, %(creation_date)s, %(mod_date)s, %(scopecontent)s, %(content_warnings_string)s)"
+                            "   ON DUPLICATE KEY UPDATE archive_box = %(archive_box)s, archive_type = %(archive_type)s, archive_folder = %(archive_folder)s, unit_title = %(unit_title)s, creation_date = %(creation_date)s, scopecontent = %(scopecontent)s, content_warnings = %(content_warnings_string)s",
                             {
                                 'table_id': table_id,
                                 'resource_id': resource_id,
@@ -202,23 +235,12 @@ for resource in list_resources:
                                 'creation_date': creation_date,
                                 'mod_date': mod_date,
                                 'scopecontent': scopecontent,
-                                'url': "{}{}".format(settings.public_aspace, uri)
+                                'url': "{}{}".format(settings.public_aspace, uri),
+                                'content_warnings_string': content_warnings_string
                             })
                 logger.info(cur.statement)
                 logger.info(cur.lastrowid)
 
-
-# Check for sensitive contents
-# sens_contents_rows = cur.execute("select refid, scopecontent from jpc_aspace_data jad where scopecontent like '%offensive%' or scopecontent like '%sensitive%' or scopecontent like '%explicit%' or scopecontent like '%cruelty%'")
-# logger.info(cur.statement)
-# rows = cur.fetchall()
-
-# for row in rows:
-#     refid = row['refid']
-#     row_check = cur.execute("select * ")
-# logger.info(cur.statement)
-# rows = cur.fetchall()
-    
 
 
 cur.close()
