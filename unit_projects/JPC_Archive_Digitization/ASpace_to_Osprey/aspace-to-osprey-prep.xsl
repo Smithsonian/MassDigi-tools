@@ -14,10 +14,10 @@
         <xsl:variable name="eadid" select="ancestor::*:archdesc/*:did/*:unitid[1]"/>
         <!-- Our expectations are that:
                 1)  we only need to processes the 3 lowest-levels of description, hereby referred to as grandparent, parent, and children levels (where parantage is calculated from the terminal component level, i.e. the 'children' levels).
-                2)  those children levels must have container elements, whereas the grand/parent elements should not.
+                2)  those children levels must have container elements (ideally the other levels will NOT have containers, but we will add that check to another validation layer)
             This XPath statement selects all grandparent elements, then, regardless of their depth in the hiearchy, then kicks off the process with the use of modes
             -->
-        <xsl:variable name="grandparents" select=".//*[matches(local-name(), $c)][not(*:did/*:container)][*[matches(local-name(), $c)][not(*:did/*:container)]/*[matches(local-name(), $c)]/*:did/*:container]" as="node()*"/>
+        <xsl:variable name="grandparents" select=".//*[matches(local-name(), $c)][*[matches(local-name(), $c)]/*[matches(local-name(), $c)]/*:did/*:container]" as="node()*"/>
         <xsl:variable name="terminal-components-with-no-containers" select=".//*[matches(local-name(), $c)][not(*:did/*:container)][not(*[matches(local-name(), $c)])]" as="node()*"/>
         <xsl:variable name="problem-component-count" select="count($terminal-components-with-no-containers)"/>
         <xsl:if test="$terminal-components-with-no-containers">
@@ -48,6 +48,7 @@
     
     <!--   children       -> c03   -->
     <xsl:template match="*[matches(local-name(), $c)]" mode="children">
+        <!-- keeping this test as is for now, as it would signal other problems that should not be ignored at this stage -->
         <xsl:if test="*[matches(local-name(), $c)]">
             <xsl:message terminate="yes" select="'Though valid, it is not expected that our children components should have any further levels of description, so the transformation has ceased!'"/>
         </xsl:if>
