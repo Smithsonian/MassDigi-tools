@@ -82,8 +82,7 @@ Headers = {"X-ArchivesSpace-Session": session_token}
 
 # as a hack, the following will get a max page size of 100, which should work in a pinch since we should never have that many at a time
 # ideally, though, this should just go through the paginated results, e.g. while 'first_page' < 'last_page'...
-# could also convert the parmeters in the following string for legibilty, but keeping this as is for now since we should only need to pull back those resources that have a finding aid status of 'Digitization' (granted, that should be digitization in the ASpace database, but that's another matter) or 'completed'
-query = '/repositories/2/search?page=1&page_size=100&fields[]=ead_id,repository,title,uri&filter={"query":{"jsonmodel_type":"boolean_query","op":"OR","subqueries":[{"jsonmodel_type":"field_query","type":"resource","field":"finding_aid_status","value":"completed","literal":true}, {"jsonmodel_type":"field_query","type":"resource","field":"finding_aid_status","value":"Digitization","literal":true}]}}'
+query = '/repositories/2/search?page=1&page_size=100&fields[]=ead_id,repository,title,uri'
 
 results = requests.get(settings.aspace_api + query, headers=Headers).json()
 
