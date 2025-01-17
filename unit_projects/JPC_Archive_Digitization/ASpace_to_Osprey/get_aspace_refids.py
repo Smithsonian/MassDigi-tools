@@ -33,11 +33,11 @@ logger.info("Starting script on {}".format(current_time))
 # Database
 try:
     conn = mysql.connector.connect(host=settings.host,
-                           user=settings.user,
-                           passwd=settings.password,
-                           database=settings.database,
-                           port=settings.port,
-                           charset='utf8mb4')
+                            user=settings.user,
+                            passwd=settings.password,
+                            database=settings.database,
+                            port=settings.port,
+                            charset='utf8mb4')
     conn.autocommit = True
     cur = conn.cursor(dictionary=True)
 except mysql.connector.Error as err:
