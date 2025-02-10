@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 #
 # Get digitized components from ASpace and store the RefIDs
-#  v. 2024-10-03
+#  v. 2025-02-10
 #  Updated to include an XSLT3 transformation of the ASpace EAD output, so that no other changes need to be made to the current mapping from EAD2002 to Osprey.
 
 import json
@@ -204,7 +204,11 @@ for resource in results['results']:
                                     archive_box = c03_item.find(
                                         './/' + ns + 'did/' + ns + 'container[@type="Binder"]').text
                                 except AttributeError:
-                                    archive_box = ""
+                                    try:
+                                        archive_box = c03_item.find(
+                                            './/' + ns + 'did/' + ns + 'container[@type="Slide Box"]').text
+                                    except AttributeError:
+                                        archive_box = ""
                 logger.info("refid and box: {}:{}".format(refid, archive_box))
                 try:
                     archive_folder = c03_item.find('.//' + ns + 'did/' + ns + 'container[@type="folder"]').text
