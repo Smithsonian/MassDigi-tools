@@ -1,0 +1,33 @@
+# Updates .tif files with incorrect create datetime tags that read "2017:09:07 16:57:44":
+exiftool -overwrite_original \
+  -if '$XMP:DateTimeOriginal eq "2017:09:07 16:57:44" and $EXIF:DateTimeOriginal eq "2017:09:07 16:57:44" and $IFD0:DateTimeOriginal eq "2017:09:07 16:57:44" and $XMP-tiff:DateTime eq "2017:09:07 16:57:44"' \
+  "-XMP-exif:DateTimeOriginal=2025:03:14 12:00:01" \
+  "-ExifIFD:DateTimeOriginal=2025:03:14 12:00:01" \
+  "-IFD0:DateTimeOriginal=2025:03:14 12:00:01" \
+  "-XMP-tiff:DateTime=2025:03:14 12:00:01" \
+  -ext tif -r /[ADD FILE DIRECTORY PATH]
+
+# Verify update: Checks to make sure that all files in the subdirectories were updates to "2025:03:14 12:00:01" and lists any that fail the conditions:
+exiftool -r -ext tif -if \
+'not (
+  $XMP:DateTimeOriginal eq "2025:03:14 12:00:01" and
+  $EXIF:DateTimeOriginal eq "2025:03:14 12:00:01" and
+  $IFD0:DateTimeOriginal eq "2025:03:14 12:00:01" and
+  $XMP-tiff:DateTime eq "2025:03:14 12:00:01"
+)' \
+-p '$FilePath' /[ADD FILE DIRECTORY PATH]
+
+# Updates .iiq files with incorrect create datetime tags that read "2017:09:07 16:57:44":
+exiftool -overwrite_original \
+  -if '$EXIF:DateTimeOriginal eq "2017:09:07 16:57:44" and $PhaseOne:DateTimeOriginal eq "2017:09:07 16:57:44" and $EXIF:CreateDate eq "2017:09:07 16:57:44"' \
+  "-ExifIFD:DateTimeOriginal=2025:03:14 12:00:01" \
+  "-ExifIFD:CreateDate=2025:03:14 12:00:01" \
+  -ext iiq -r /[ADD FILE DIRECTORY PATH]
+
+# Verify update: Checks to make sure that all files in the subdirectories were updates to "2025:03:14 12:00:01" and lists any that fail the conditions:
+exiftool -r -ext iiq -if \
+'not (
+  $EXIF:DateTimeOriginal eq "2025:03:14 12:00:01" and
+  $EXIF:CreateDate eq "2025:03:14 12:00:01"
+)' \
+-p '$FilePath' /[ADD FILE DIRECTORY PATH]
