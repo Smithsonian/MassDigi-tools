@@ -82,7 +82,13 @@ Headers = {"X-ArchivesSpace-Session": session_token}
 
 # as a hack, the following will get a max page size of 100, which should work in a pinch since we should never have that many at a time
 # ideally, though, this should just go through the paginated results, e.g. while 'first_page' < 'last_page'...
-query = '/repositories/2/search?page=1&page_size=100&fields[]=ead_id,repository,title,uri'
+
+# collections to include:
+# finding_aid_status = 'Digitization' (note, if this field is lower-cased in the database, this query would break )
+# collections to exclude :
+# /repositories/2/resources/7  = A/V:      2023.M.24-AV
+# /repositories/2/resources/43 = Serials:  2023.M.24-PUB
+query = '/repositories/2/search?page=1&page_size=100&q=finding_aid_status:"Digitization"-id:"/repositories/2/resources/7"-id:"/repositories/2/resources/43"&type[]=resource&fields[]=ead_id,repository,title,uri'
 
 results = requests.get(settings.aspace_api + query, headers=Headers).json()
 
