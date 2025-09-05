@@ -84,11 +84,11 @@ Headers = {"X-ArchivesSpace-Session": session_token}
 # ideally, though, this should just go through the paginated results, e.g. while 'first_page' < 'last_page'...
 
 # collections to include:
-# finding_aid_status = 'Digitization' (note, if this field is lower-cased in the database, this query would break )
+# finding_aid_status = 'Digitization'
 # collections to exclude :
 # /repositories/2/resources/7  = A/V:      2023.M.24-AV
 # /repositories/2/resources/43 = Serials:  2023.M.24-PUB
-query = '/repositories/2/search?page=1&page_size=100&q=finding_aid_status:"Digitization"-id:"/repositories/2/resources/7"-id:"/repositories/2/resources/43"&type[]=resource&fields[]=ead_id,repository,title,uri'
+query = '/repositories/2/search?page=1&page_size=100&q=finding_aid_status:"/[Dd]igitization/"-id:"/repositories/2/resources/7"-id:"/repositories/2/resources/43"&type[]=resource&fields[]=ead_id,repository,title,uri'
 
 results = requests.get(settings.aspace_api + query, headers=Headers).json()
 
