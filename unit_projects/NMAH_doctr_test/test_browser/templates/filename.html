@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- SI Elements -->
+    <link rel="preload" href="{{ url_for('static', filename='css/qfv0ytn.css') }}" as="style">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/qfv0ytn.css') }}">
+
+    <!-- favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+    <!-- Datatables -->
+    <!-- <link
+            href="{{ url_for('static', filename='css/datatables.min.css') }}"
+            rel="stylesheet"
+            /> -->
+    <link href="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.1.4/b-3.1.1/b-html5-3.1.1/b-print-3.1.1/sc-2.4.3/datatables.min.css" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <!-- <link
+            href="{{ url_for('static', filename='css/bootstrap.min.css') }}"
+            rel="stylesheet"
+            /> -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+        
+    <!-- Font Awesome -->
+    <link href="{{ url_for('static', filename='css/all.min.css') }}" rel="stylesheet" />
+
+    <!-- Osprey-specific CSS -->
+    <link href="{{ url_for('static', filename='css/osprey_custom.min.css') }}" rel="stylesheet" />
+    
+    <!-- favicons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+
+    <title class="pagetitle">{{ html_title }}</title>
+
+</head>
+<body>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-6">
+
+                <h3><em>{{ file_stem }}</em> Image</h3>
+                    <div style="height: 320px">
+                        <img src="{{ url_for('static', filename=image) }}">
+                    </div>
+                <br>
+                <!-- Ground truth Data -->
+                <div class="card">
+                    <h3 class="card-header text-white bg-primary">Ground Truth Text</h3>
+                    <div class="card-body">
+                        {% for row in extracted_text %}
+                            {{ row }}<br>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+            </div>
+            <div class="col-6">
+                <h3><em>{{ model }}</em> output</h3>
+                <div id="model_text" class="modelinfo" style="position: relative; width: 580px; height: 320px; border-style: dashed;">
+                    {% for index, row in extracted_text_df.iterrows() %}
+                        <div style="left: {{ row.vertices_x_0 }}px; top: {{ row.vertices_y_0 }}px; position: absolute; font-size:12px; font-weight: bold; border-style: dotted; border-color: {% if row.confidence > 0.9 %}green{% elif row.confidence < 0.9 and row.confidence > 0.8 %}orange{% else %}red{% endif %};" title="Confidence: {{ row.confidence }}">{{ row.word }}</div>
+                    {% endfor %}
+                </div>
+                <br>
+                <!-- Model res -->
+                <div class="card">
+                    <h3 class="card-header text-white bg-info">Model Text</h3>
+                    <div class="card-body">
+                        {% for row in model_text %}
+                            {{ row }}<br>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                
+                <!-- <form action="{{ url_for('show_file') }}" method="GET">
+                    <label for="filename" class="form-label">Choose a file:</label>
+                    <select class="form-control form-control-sm form-select" aria-label="Choose a file" id="filename" name="filename">
+                        {% for file in list_of_files %}
+                                {% if file == filename %}
+                                    <option value="{{ file | replace('static%2Fcards%2F', '') }}" selected>{{ file | replace('static%2Fcards%2F', '') }}</option>
+                                {% else %}
+                                    <option value="{{ file | replace('static%2Fcards%2F', '') }}">{{ file | replace('static%2Fcards%2F', '') }}</option>
+                                {% endif %}
+                        {% endfor %}
+                    </select>
+                    <label for="model" class="form-label">Choose a model:</label>
+                    <select class="form-control form-control-sm form-select" aria-label="Choose a model" id="model" name="model">
+                        <option value="easyocr_cpu" {% if model == 'easyocr_cpu' %}selected{% endif %}>easyocr_cpu</option>
+                        <option value="pytesseract" {% if model == 'pytesseract' %}selected{% endif %}>pytesseract</option>
+                        <option value="tesseract_default" {% if model == 'tesseract_default' %}selected{% endif %}>tesseract_default</option>
+                        <option value="tesseract_sparse" {% if model == 'tesseract_sparse' %}selected{% endif %}>tesseract_sparse</option>
+                        <option value="surya_gpu" {% if model == 'surya_gpu' %}selected{% endif %}>surya_gpu</option>
+                    </select>
+                    <button type="submit" class="btn btn-sm btn-primary form-control form-control-sm">View</button>
+                </form> -->
+                
+
+                
+            </div>
+        </div>
+        <div class="row">
+            <hr>
+            <div class="card">
+                <h3 class="card-header text-white bg-secondary">Model Details</h3>
+                <div class="card-body">
+                    {% for table in datatables %}
+                        {{ table|safe }}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- 
+                <div class="row">
+                    <div class="col"><input type="radio" class="btn-check" name="qc_val" value="0" id="success-outlined" autocomplete="off" checked>
+                        <label class="btn btn-outline-success" for="success-outlined">Transcription OK</label> </div>
+                    <div class="col"><input type="radio" class="btn-check" name="qc_val" value="1" id="critical-outlined" autocomplete="off">
+                        <label class="btn btn-outline-danger" for="critical-outlined">Critical Issue</label> <small></small></div>
+                    <div class="col"><input type="radio" class="btn-check" name="qc_val" value="2" id="major-outlined" autocomplete="off">
+                        <label class="btn btn-outline-warning text-black" for="major-outlined">Major Issue</label> <small></small></div>
+                    <div class="col"><input type="radio" class="btn-check" name="qc_val" value="3" id="minor-outlined" autocomplete="off">
+                        <label class="btn btn-outline-warning text-black" for="minor-outlined">Minor Issue</label> <small></small></div>
+
+                    <br><br>
+
+                    <label for="qc_info" class="form-label">Notes or issues:</label>
+                    <input type="text" class="form-control" id="qc_info" name="qc_info" aria-label="Notes or issues:">
+                    
+                    <br><br>
+
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    
+                </div> -->
+
+<!-- <br><br><br> -->
+
+    
+
+    <!-- JQuery -->
+    <!-- <script
+            type="text/javascript"
+            src="{{ url_for('static', filename='js/jquery-3.7.1.min.js') }}"
+    ></script> -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+
+    <!-- Bootstrap -->
+    <!-- <script
+            type="text/javascript"
+            src="{{ url_for('static', filename='js/bootstrap.min.js') }}"
+    ></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <!-- Datatables -->
+    <!-- <script
+            type="text/javascript"
+            src="{{ url_for('static', filename='js/datatables.min.js') }}"
+    ></script> -->
+    <script src="https://cdn.datatables.net/v/dt/jszip-3.10.1/dt-2.1.4/b-3.1.1/b-html5-3.1.1/b-print-3.1.1/sc-2.4.3/datatables.min.js"></script>
+
+    <!-- Datatables -->
+    <script type="text/javascript">
+        $(function() {
+            $( document ).tooltip();
+        });
+
+        $(document).ready( function () {
+            var table1 = $('#file_table').DataTable({
+                scrollY: '500px',
+                "ordering": true,
+                "searching": true,
+                "paging": false,
+                "lengthChange": false,
+
+                    'rowCallback': function(row, data, index){
+                        
+                            if(data[3] < 0.9){
+                                if(data[3] < 0.80){
+                                    $(row).find('td:eq(2)').css('background', '#dc3545');
+                                    $(row).find('td:eq(2)').css('color', 'white');
+                                }else{
+                                    $(row).find('td:eq(2)').css('background', 'yellow');
+                                    $(row).find('td:eq(2)').css('color', 'black');
+                                }
+                            }else{
+                                $(row).find('td:eq(2)').css('background', '#6ab05c');
+                                $(row).find('td:eq(2)').css('color', 'white');
+                            }
+                        
+                    },
+                    columnDefs: [
+                                {
+                                    target: 0,
+                                    visible: false
+                                },
+                                {
+                                    target: 8,
+                                    visible: false
+                                },
+                                {
+                                    target: 9,
+                                    visible: false
+                                },
+                                {
+                                    target: 10,
+                                    visible: false
+                                },
+                                {
+                                    target: 11,
+                                    visible: false
+                                },
+
+                            ]
+                
+
+                });
+            });
+    </script>
+
+    
+
+ <!-- openseadragon -->
+ <script src="{{ url_for('static', filename='js/openseadragon.min.js') }}"></script>
+
+ <script type="text/javascript">
+     var viewer = OpenSeadragon({
+         id: "openseadragon",
+         prefixUrl: "{{ url_for('static', filename='images/') }}",
+         tileSources: "{{ url_for('static', filename=filename) }}",
+         timeout: 60000,
+         tileRetryMax: 2,
+         preload: true,
+         constrainDuringPan: true,
+         showRotationControl: true,
+         showNavigator: true,
+         maxZoomPixelRatio: 1 
+     });
+ </script>
+
+
+</body>
+</html>

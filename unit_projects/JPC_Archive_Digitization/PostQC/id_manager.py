@@ -3,7 +3,7 @@
 # Write IDs to Getty's ID Manager
 #  Get receipts to confirm all records exist as intended
 # 
-# Ver 2024-07-18
+# Ver 2025-03-11
 
 import json
 import requests
@@ -100,10 +100,10 @@ logger.info("Connected to db")
 # Get folder from JPCA
 #   only if QC Passed and it has been delivered to DAMS
 if folder_id is None:
-    query = "SELECT f.* FROM folders fol, qc_folders q WHERE fol.project_id = 201 and fol.project_folder = %(project_folder)s AND fol.folder_id = q.folder_id AND q.qc_status = 0 AND fol.delivered_to_dams = 0"
+    query = "SELECT f.* FROM folders fol, qc_folders q WHERE fol.project_id = 220 and fol.project_folder = %(project_folder)s AND fol.folder_id = q.folder_id AND q.qc_status = 0 AND fol.delivered_to_dams = 0"
     cur.execute(query, {'project_folder': project_folder})
 else:
-    query = "SELECT * FROM folders WHERE project_id = 201 and folder_id = %(folder_id)s"
+    query = "SELECT * FROM folders WHERE project_id = 220 and folder_id = %(folder_id)s"
     cur.execute(query, {'folder_id': folder_id})
 
 folder_info = cur.fetchall()
@@ -126,8 +126,6 @@ cur.execute(get_refids, {'folder_id': folder_info['folder_id']})
 list_refids = cur.fetchall()
 logger.info("list_refids: {}".format(len(list_refids)))
 
-# cur.close()
-# conn.close()
 
 
 # Group ID
@@ -138,40 +136,23 @@ group_id = "dpo-jpca-fol{}".format(folder_info['folder_id'])
 #def sendids(refid_row):
 for refid_row in list_refids:
     refid = refid_row['refid']
-    # Set group id for each batch using folder_id
-    # group_id = "dpo-jpca-fol{}".format(folder_info['folder_id'])
     logger.info("refid: {}".format(refid))
     logger.info("group_id: {}".format(group_id))
     print("RefID: {} ({})".format(refid, group_id))    
-    # try:
-    #     conn = pymysql.connect(host=settings.host,
-    #                         user=settings.user,
-    #                         passwd=settings.password,
-    #                         database=settings.database,
-    #                         port=settings.port,
-    #                         charset='utf8mb4',
-    #                         cursorclass=pymysql.cursors.DictCursor,
-    #                         autocommit=True)
-    #     cur = conn.cursor()
-    # except pymysql.Error as e:
-    #     print(e)
-    #     logger.error("Error connecting to the db: {}".format(e))
-    #     sys.exit('System error')
-    # 
     data_query = """
                 with data1 as (select id1_value as refid, id2_value as hmo from jpc_massdigi_ids jmi where 
-                    id_relationship  = 'refid_hmo' and id1_value = %(refid)s),
+                    id_relationship  = 'refid_hmo' and id1_value = %(refid)s and folder_id = %(folder_id)s),
                     
                     data2 as (select id1_value as hmo, id2_value as tif from jpc_massdigi_ids jmi where 
-                    id_relationship  = 'hmo_tif'),
+                    id_relationship  = 'hmo_tif' and folder_id = %(folder_id)s),
                     
                     data3 as (select id1_value as tif, id2_value as dams from jpc_massdigi_ids jmi where 
-                    id_relationship  = 'tif_dams')
+                    id_relationship  = 'tif_dams' and folder_id = %(folder_id)s)
                     
                 select data1.refid, data1.hmo, data2.tif, data3.dams
                 from data1, data2, data3 
                 where data1.hmo=data2.hmo and data2.tif=data3.tif"""
-    cur.execute(data_query, {'refid': refid})
+    cur.execute(data_query, {'refid': refid, 'folder_id': folder_id})
     data_vals = cur.fetchall()
     if len(data_vals) == 0:
         logger.error("HMO data missing for folder {}".format(folder_id))
@@ -195,19 +176,18 @@ for refid_row in list_refids:
                         }
         try:
             r = requests.post("{}/links".format(settings.id_manager_url), json=params, headers=Headers)
-            if r.status_code != 201:
-                if r.status_code == 200:
+            if r.status_code in [201, 220]:
+                results = json.loads(r.text)
+                results_id = results['id']
+            elif r.status_code == 200:
                     url_to_check = "{}/links?body_id={}&target_id={}".format(settings.id_manager_url, urllib.parse.quote_plus(dams_uan), urllib.parse.quote_plus(aspace_refid))
                     r = requests.get(url_to_check)
                     results = json.loads(r.text)
                     results_id = results['first']['items'][0]['id']
-                else:
-                    logger.error("INSERT FAILED - DAMS-ASPACE Link")
-                    logger.error("dams_uan, arches_record, aspace_refid: {}".format(dams_uan, arches_record, aspace_refid))
-                    continue
             else:
-                results = json.loads(r.text)
-                results_id = results['id']
+                logger.error("INSERT FAILED - DAMS-ASPACE Link")
+                logger.error("dams_uan, arches_record, aspace_refid: {}".format(dams_uan, arches_record, aspace_refid))
+                continue
             r = requests.get(results_id)
             print(r.status_code)
             res_check = json.loads(r.text)
@@ -232,19 +212,19 @@ for refid_row in list_refids:
                         "motivation": motivation_arches_record
                         }
             r = requests.post("{}/links".format(settings.id_manager_url), json=params, headers=Headers)
-            if r.status_code != 201:
-                if r.status_code == 200:
+            r = requests.post("{}/links".format(settings.id_manager_url), json=params, headers=Headers)
+            if r.status_code in [201, 220]:
+                results = json.loads(r.text)
+                results_id = results['id']
+            elif r.status_code == 200:
                     url_to_check = "{}/links?body_id={}&target_id={}".format(settings.id_manager_url, urllib.parse.quote_plus(dams_uan), urllib.parse.quote_plus(arches_record))
                     r = requests.get(url_to_check)
                     results = json.loads(r.text)
                     results_id = results['first']['items'][0]['id']
-                else:
-                    logger.error("INSERT FAILED - DAMS-ARCHES Link")
-                    logger.error("dams_uan, arches_record, aspace_refid: {}".format(dams_uan, arches_record, aspace_refid))
-                    continue
             else:
-                results = json.loads(r.text)
-                results_id = results['id']
+                logger.error("INSERT FAILED - DAMS-ARCHES Link")
+                logger.error("dams_uan, arches_record, aspace_refid: {}".format(dams_uan, arches_record, aspace_refid))
+                continue
             results = json.loads(r.text)
             results_id = results['id']
             r = requests.get(results_id)
@@ -261,14 +241,7 @@ for refid_row in list_refids:
             post_proc = "INSERT INTO file_postprocessing (file_id, post_step, post_results, post_info) (SELECT file_id, %(post_step)s, 1, %(post_info)s FROM files WHERE folder_id = %(folder_id)s and file_name like %(ref_id)s) ON DUPLICATE KEY UPDATE post_results = 1, post_info = %(post_info)s"
             logger.info(post_proc)
             cur.execute(post_proc, {'folder_id': folder_info['folder_id'], 'post_step': 'id_manager_arches', 'post_info': "ID Manager id_manager_arches failed: {}, {}, {}".format(group_id, dams_uan, arches_record), 'ref_id': "{}_%".format(refid)})
-    # cur.close()
-    # conn.close()
-    # return
-
-
-# Process each refid in parallel
-# pool = Pool(NUM_CORES)
-# results = pool.map(sendids, list_refids)
+    
 
 
 ######################################
@@ -345,6 +318,7 @@ if len(missing_files) > 0:
 cur.close()
 conn.close()
 
+
 END_TIME = time.time()
 TOTAL_TIME = "{} sec".format((END_TIME - START_TIME))
 
@@ -353,7 +327,7 @@ TOTAL_TIME = "{} sec".format((END_TIME - START_TIME))
 print("\n\n Execution time was: {} secs\n\n".format(TOTAL_TIME))
 
 logger.info("Ending script on {}".format(strftime("%Y%m%d_%H%M%S", localtime())))
-
 logger.info("Script took: {} secs".format(TOTAL_TIME))
 
 sys.exit(0)
+

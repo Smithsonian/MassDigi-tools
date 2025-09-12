@@ -1,0 +1,8 @@
+flask
+numpy
+pandas
+# mysql-connector-python
+Pillow>=10.1.0
+# werkzeug>=3.0.1
+#mod-wsgi
+rapidfuzz

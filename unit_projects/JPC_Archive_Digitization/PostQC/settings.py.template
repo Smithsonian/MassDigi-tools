@@ -13,3 +13,7 @@ arches_api_clientid=""
 arches_api_secret=""
 
 graph_id=""
+
+
+rcv_login = ""
+rcv_pass = ""

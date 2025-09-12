@@ -3,7 +3,7 @@
 # Create stub records in Arches
 # Script adapted from Getty-provided ingest script
 #
-# Ver 2024-07-18
+# Ver 2025-03-10
 #
 import requests
 from typing import Final
@@ -96,7 +96,7 @@ logger.info("Connected to db")
 
 
 
-query = "SELECT * FROM folders WHERE project_id = 201 and project_folder = %(project_folder)s"
+query = "SELECT * FROM folders WHERE project_id = 220 and project_folder = %(project_folder)s"
 cur.execute(query, {'project_folder': project_folder})
 
 
@@ -104,10 +104,10 @@ cur.execute(query, {'project_folder': project_folder})
 # Get folder from JPCA
 #   only if QC Passed and it has been delivered to DAMS
 if folder_id is None:
-    query = "SELECT * FROM folders WHERE project_id = 201 and project_folder = %(project_folder)s"
+    query = "SELECT * FROM folders WHERE project_id = 220 and project_folder = %(project_folder)s"
     cur.execute(query, {'project_folder': project_folder})
 else:
-    query = "SELECT * FROM folders WHERE project_id = 201 and folder_id = %(folder_id)s"
+    query = "SELECT * FROM folders WHERE project_id = 220 and folder_id = %(folder_id)s"
     cur.execute(query, {'folder_id': folder_id})
 
 
@@ -143,21 +143,30 @@ for refid in list_refids:
 
     query = ("""
         with data as (
-        SELECT id1_value as refid, id2_value as hmo FROM dpo_osprey.jpc_massdigi_ids 
+                SELECT id1_value as refid, id2_value as hmo FROM dpo_osprey.jpc_massdigi_ids 
                         where id_relationship = 'refid_hmo' and id1_value= %(refid)s
-                    ),
-        data2 as (select id1_value as hmo, SUBSTRING_INDEX(SUBSTRING_INDEX(id2_value , '_', -2), '_', 1) as item FROM dpo_osprey.jpc_massdigi_ids 
-                        where id_relationship = 'hmo_tif' group by hmo, item)
-                select d.*, 
-                concat(j.unit_title, ' - Box ', j.archive_box, ' Folder ', j.archive_folder, ' Item ', 
-                        d2.item
+                        ),
+        data2 as (select 
+                        id1_value as hmo, 
+                        SUBSTRING_INDEX(SUBSTRING_INDEX(id2_value , '_', -2), '_', 1) as item,
+                        f.project_folder 
+                        FROM jpc_massdigi_ids j, folders f 
+                        where j.id_relationship = 'hmo_tif' and j.folder_id = %(folder_id)s and
+                                j.folder_id = f.folder_id 
+                        group by hmo, item)
+        select d.*, 
+            concat(j.unit_title, ' - Box ', 
+                            replace(SUBSTRING_INDEX(SUBSTRING_INDEX(d2.project_folder , '_2024', 1), '_', -2), '_', '-')
+                            , 
+                            ' Folder ', j.archive_folder, ' Item ', 
+                    d2.item
                             ) as unit_title, 
-                j.archive_box, j.archive_folder, d2.item
-                from data d, data2 d2, jpc_aspace_data j where d.refid=j.refid
-                and d.hmo=d2.hmo
+            j.archive_box, d2.project_folder, d2.item
+            from data d, data2 d2, jpc_aspace_data j where d.refid=j.refid
+            and d.hmo=d2.hmo
         """)
 
-    cur.execute(query, {'refid': refid})
+    cur.execute(query, {'refid': refid, 'folder_id': folder_id})
     data = cur.fetchall()
     logger.info("Got {} records".format(len(data)))
 
@@ -200,7 +209,7 @@ for refid in list_refids:
         record_id = a_client.put_record(graph_id=GRAPH_ID, data=json_data_model, rec_id=hmo_id)
 
         logger.info("HMO {} saved".format(hmo_id))
-        print(hmo_id)
+        # print(hmo_id)
         
         # Get the record back to confirm it exists
         record = a_client.get_record(hmo_id)

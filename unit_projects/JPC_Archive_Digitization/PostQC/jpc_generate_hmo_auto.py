@@ -63,10 +63,10 @@ logger.info("Connected to db")
 
 
 if folder_id is None:
-    query = "SELECT * FROM folders WHERE project_id = 201 and project_folder = %(project_folder)s"
+    query = "SELECT * FROM folders WHERE project_id = 220 and project_folder = %(project_folder)s"
     cur.execute(query, {'project_folder': project_folder})
 else:
-    query = "SELECT * FROM folders WHERE project_id = 201 and folder_id = %(folder_id)s"
+    query = "SELECT * FROM folders WHERE project_id = 220 and folder_id = %(folder_id)s"
     cur.execute(query, {'folder_id': folder_id})
 
 folder_info = cur.fetchall()[0]
@@ -85,7 +85,7 @@ get_refids = """SELECT
                     q.qc_status = 0 AND 
                     f.folder_id = fol.folder_id AND
                     fol.delivered_to_dams = 0 AND
-                    SUBSTRING_INDEX(f.file_name, '_', 1) NOT IN (SELECT DISTINCT id1_value FROM jpc_massdigi_ids where id_relationship = 'refid_hmo') AND 
+                    fol.folder_id not in (SELECT DISTINCT folder_id FROM jpc_massdigi_ids where folder_id is not null) AND
                     f.folder_id = %(folder_id)s"""
 cur.execute(get_refids, {'folder_id': folder_id})
 list_refids = cur.fetchall()
@@ -101,11 +101,11 @@ for refid in list_refids:
     refid_info = cur.fetchall()
 
     if len(refid_info) == 1:
-        query = "SELECT distinct SUBSTRING_INDEX(file_name, '_', 2) as sequence FROM files where folder_id in (SELECT folder_id FROM folders WHERE project_id = 201) and file_name like '{}_%'".format(refid)
+        query = "SELECT distinct SUBSTRING_INDEX(file_name, '_', 2) as sequence FROM files where folder_id in (SELECT folder_id FROM folders WHERE project_id = 220) and file_name like '{}_%' AND folder_id = {}".format(refid, folder_id)
         cur.execute(query)
         objects = cur.fetchall()
 
-        insert_query = "INSERT INTO jpc_massdigi_ids (id_relationship, id1_value, id2_value) VALUES (%(id_relationship)s, %(id1_value)s, %(id2_value)s)"
+        insert_query = "INSERT INTO jpc_massdigi_ids (id_relationship, id1_value, id2_value, folder_id) VALUES (%(id_relationship)s, %(id1_value)s, %(id2_value)s, %(folder_id)s)"
 
         for object in objects:
             logger.info("object: {}".format(object))
@@ -116,7 +116,8 @@ for refid in list_refids:
                                 {
                                     'id_relationship': id_relationship,
                                     'id1_value': refid,
-                                    'id2_value': hmo_id
+                                    'id2_value': hmo_id,
+                                    'folder_id': folder_id
                                 })
 
             query = "SELECT file_id, file_name, dams_uan from files where folder_id = {} and file_name like '{}_%'".format(folder_id, object['sequence'])
@@ -129,7 +130,8 @@ for refid in list_refids:
                                 {
                                     'id_relationship': id_relationship,
                                     'id1_value': hmo_id,
-                                    'id2_value': file['file_name']
+                                    'id2_value': file['file_name'],
+                                    'folder_id': folder_id
                                 })
             
                 # Relationship between the tif and DAMS UAN
@@ -138,7 +140,8 @@ for refid in list_refids:
                                 {
                                     'id_relationship': id_relationship,
                                     'id1_value': file['file_name'],
-                                    'id2_value': file['dams_uan']
+                                    'id2_value': file['dams_uan'],
+                                    'folder_id': folder_id
                                 })
     else:
         logger.error("refid not found: {}".format(refid))

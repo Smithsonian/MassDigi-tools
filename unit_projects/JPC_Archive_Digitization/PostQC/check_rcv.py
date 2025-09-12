@@ -66,7 +66,7 @@ cur.execute(query)
 cur.close()
 conn.close()
 
-insert_query = "INSERT INTO file_postprocessing (file_id, post_step, post_results, post_info) (SELECT file_id, 'rcv_record', %(hmo_res)s, %(hmo_info)s FROM files f, jpc_massdigi_ids j WHERE f.file_name = j.id2_value AND j.id1_value = %(hmoid)s and j.id_relationship = 'hmo_tif' and f.folder_id in (select folder_id from folders where (project_id = 186 or project_id = 201))) ON DUPLICATE KEY UPDATE post_results = 1, post_info = %(hmo_info)s"
+insert_query = "INSERT INTO file_postprocessing (file_id, post_step, post_results, post_info) (SELECT file_id, 'rcv_record', %(hmo_res)s, %(hmo_info)s FROM files f, jpc_massdigi_ids j WHERE f.file_name = j.id2_value AND j.id1_value = %(hmoid)s and j.id_relationship = 'hmo_tif' and f.folder_id in (select folder_id from folders where (project_id = 186 or project_id = 201))) ON DUPLICATE KEY UPDATE post_results = %(hmo_res)s, post_info = %(hmo_info)s"
 
 
 
