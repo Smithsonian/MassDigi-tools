@@ -4,7 +4,7 @@
 #  and write it on each image using Imagemagick
 # Version for Entomology Conveyor
 # 
-# v. 2025-09-16
+# v. 2025-09-17
 
 FILE=$1
 
@@ -12,12 +12,14 @@ FILE=$1
 USNMENT=$(echo "$FILE" | cut -d'_' -f1)
 
 # Add USNMENT number
-convert -limit thread 1 $FILE -gravity SouthWest -background white -splice 0x300 -pointsize 220 -fill black -annotate +14+40 "$USNMENT" -type truecolor -depth 8 -compress lzw export/$FILE
+convert -limit thread 4 $FILE -gravity SouthEast -background white -splice 0x300 -pointsize 120 -fill black -annotate +600+300 "$USNMENT" -type truecolor -depth 8 -compress lzw export/$FILE
 
 # Add logo on bottom-left
-composite -gravity SouthEast si_logo-primary.png export/$FILE export/$FILE
+composite -gravity SouthEast nmnh.png export/$FILE export/$FILE
 
 #Transfer exif data
 exiftool -overwrite_original -TagsFromFile $FILE "-all:all>all:all" export/$FILE
+
+convert export/$FILE export/${FILE%.tif}.jpg
 
 exit 0

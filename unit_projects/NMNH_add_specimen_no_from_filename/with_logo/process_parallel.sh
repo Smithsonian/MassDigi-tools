@@ -5,6 +5,6 @@
 
 mkdir export
 
-ls *.tif | parallel -j 8 bash add_name_logo.sh {}
+ls *.tif | parallel -j 4 bash add_name_logo.sh {}
 
 exit 0
