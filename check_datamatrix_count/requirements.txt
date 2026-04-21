@@ -1,0 +1,3 @@
+pylibdmtx
+pylibdmtx[scripts]
+p_tqdm
