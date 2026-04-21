@@ -1,5 +1,7 @@
 # JPC Archive Digitization
 
+**NOTE: this script is broken and no longer gets all the necessary data. It is kept for reference.**
+
 ## ASpace to Osprey
 
 Script to gather all RefId's from ASpace and store them in the Osprey database. 

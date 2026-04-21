@@ -128,3 +128,5 @@ unit_projects/JPC_Archive_Digitization/Arches/arches_api_client-main.zip
 *.xml
 *.gz
 unit_projects/JPC_Archive_Digitization/draft_scripts/Arches/settings_arches.py
+
+*.pdf

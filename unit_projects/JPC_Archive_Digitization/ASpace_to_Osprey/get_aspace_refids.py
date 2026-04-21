@@ -36,7 +36,7 @@ def save_ead(content, filename):
         f.write(content)
 
 # Logging
-current_time = strftime("%Y%m%d_%H%M%S", localtime())
+current_time = strftime("%Y%m%d", localtime())
 
 logfile = 'get_aspace_refids_{}.log'.format(current_time)
 logging.basicConfig(filename=logfile, filemode='a', level=logging.DEBUG,
@@ -136,6 +136,7 @@ for resource in results['results']:
             save_ead(transformed_ead, filename)
         except:
             logger.info("Error when trying to save the EAD transformation of {}".format(resource_id))
+            sys.exit(1)
         # here, we've just switched the old r.text from ASpace, with the new transformed_ead string from saxonche
         # get root element
         tree = ET.fromstring(transformed_ead)
@@ -143,6 +144,7 @@ for resource in results['results']:
 
     except:
         logger.info("Error when trying to cycle through the resource list.")
+        sys.exit(1)
 
     ns = "{urn:isbn:1-931666-22-9}"
 
@@ -154,21 +156,22 @@ for resource in results['results']:
     for c01_item in c01_list:
         # iterate child elements of item
         unit_title = c01_item.find('.//' + ns + 'did/' + ns + 'unittitle').text
+        logger.info(f"{unit_title} ({i})")
         c02_items = c01_item.findall('.//' + ns + 'c02')
         for c02_item in c02_items:
             try:
                 fol_type = c02_item.find('.//' + ns + 'did/' + ns + 'unittitle').text
             except AttributeError:
                 logger.error("Error finding fol_type for {}".format(unit_title))
-                exit
+                sys.exit(1)
             try:
                 c03_items = c02_item.findall('.//' + ns + 'c03')
             except AttributeError:
                 logger.error("Error finding c03_items for {}".format(unit_title))
-                exit
+                sys.exit(1)
             for c03_item in c03_items:
                 refid = c03_item.attrib['id'].replace('aspace_', '')
-                logger.info("c03 refid: {}".format(refid))
+                logger.info(f"c03 refid: {refid} (unit: {unit_title}; i: {i})")
                 # Get URL
                 # *** Note (NEW):  the following could be retrieved from the EAD eventually... since we will be updating the EAD to include more about the CW elements as well as the Rights element
                 # *** but if another API call is used, the find_by_id bit isn't needed.  you can just do a GET for the URI, e.g. 
@@ -188,7 +191,7 @@ for resource in results['results']:
                             settings.aspace_api, refid), headers=Headers)
                     object_json = json.loads(r.text)
                     uri = object_json['archival_objects'][0]['ref']
-                logger.error("c03_uri: {}".format(uri))
+                logger.info("c03_uri: {}".format(uri))
                 creation_time = object_json['archival_objects'][0]['_resolved']['create_time']
                 creation_date = creation_time.split('T')[0]
                 mod_date = object_json['archival_objects'][0]['_resolved']['user_mtime']
